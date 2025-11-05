@@ -1,0 +1,22 @@
+# compose.yml
+services:
+  # Production-like testing with hot reload
+  test:
+    container_name: test
+    build: .
+    command: Rscript -e "gaupefam::hello()"
+    develop:
+      # Create a `watch` configuration to update the app
+      watch:
+        # Sync the working directory with the `/home/rstudio/workspace` directory in the container
+        - action: sync
+          path: .
+          target: /home/rstudio/workspace
+          # Exclude the project dependencies and cache
+          ignore:
+            - .git/
+        # Rebuild the image if dependencies change by checking renv.lock
+        - action: rebuild
+          path: ./DESCRIPTION
+        - action: rebuild
+          path: ./renv.lock

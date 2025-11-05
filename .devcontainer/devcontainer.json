@@ -1,0 +1,106 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/docker-existing-docker-compose
+{
+	"name": "gaupefam R Package Development",
+	"dockerComposeFile": [
+		"docker-compose.yml"
+	],
+	"service": "vscode",
+  "workspaceFolder": "/home/rstudio/workspace", //workspaces/gaupefam
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Uncomment the next line if you want start specific services in your Docker Compose config.
+	"runServices": ["vscode"],
+
+	"shutdownAction": "stopCompose",
+
+
+
+	// Configure tool-specific properties.
+	"customizations": {
+		"vscode": {
+			"settings": {
+				// Theme VS Code
+				"workbench.colorCustomizations": {
+					"activityBar.background": "#1B3402",
+					"titleBar.activeBackground": "#264803",
+					"titleBar.activeForeground": "#F1FEE4"
+				},
+
+				// Editor settings
+				"editor.formatOnSave": true,
+				"editor.rulers": [
+					{ "column": 78, "color": "#737171" },
+					{ "column": 88, "color": "#2affa3" }
+				],
+
+				// Terminal settings
+				"terminal.integrated.defaultProfile.linux": "bash",
+
+				// Copilot
+				"github.copilot.nextEditSuggestions.enabled": true,
+				"github.copilot.advanced": {
+					"length": 500,
+					"temperature": 0.1
+				},
+
+				// R settings
+				"r.rpath.linux": "/usr/bin/R",
+				"r.rterm.linux": "/opt/python-tools/bin/radian",
+				"r.alwaysUseActiveTerminal": true,
+				"r.bracketedPaste": true,
+				"r.sessionWatcher": true,
+				"r.useRenvLibPath": true,
+				"r.plot.useHttpgd": false,
+				"r.plot.defaults.colorTheme": "vscode",
+				"r.rtermSendDelay": 8,
+
+				"[r]": {
+					"editor.defaultFormatter": "REditorSupport.r",
+					"editor.tabSize": 2,
+					"editor.formatOnSave": true
+				},
+				"[markdown]": {
+					"editor.wordWrap": "on",
+					"editor.formatOnSave": true,
+					"editor.quickSuggestions": {
+						"comments": "off",
+						"strings": "off",
+						"other": "off"
+					}
+				}
+			},
+			"extensions": [
+				// R Development
+				"reditorsupport.r",
+				"reditorsupport.r-syntax",
+				"rdebugger.r-debugger",
+
+				// Markdown & Documentation
+				"chrischinchilla.vscode-pandoc",
+				"yzhang.markdown-all-in-one",
+
+				// Git and Version Control
+				"donjayamanne.githistory",
+				"mhutchie.git-graph",
+
+				// Code Quality & Formatting
+				"ms-vscode.vscode-json",
+				"esbenp.prettier-vscode",
+				"davidanson.vscode-markdownlint",
+				"usernamehw.errorlens",
+
+				// Docker and DevOps
+				"ms-azuretools.vscode-docker"
+			]
+		}
+	},
+  // "postCreateCommand": "renv::restore()",
+	// Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
+	"remoteUser": "rstudio"
+}

@@ -1,0 +1,47 @@
+# Version control / Code Quality / CICD
+.git
+.github
+.gitignore
+.pre-commit-config.yaml
+.lintr
+
+# VS Code
+.vscode/
+
+# Docker
+*.Dockerfile
+compose.yml
+
+# Documentation (not needed in container)
+*.md
+*.Rmd
+
+# Development directories
+data-raw/
+data-raw/raw/
+dump/
+notebooks/
+tests/
+scripts/
+
+# R Studio files
+*.Rproj.user/
+*.Rhistory
+*.RData
+*.Rproj
+rstudio.Rprofile
+# ENVS are set in docker compose
+*.Renviron
+
+# renv (prod does not use renv)
+#renv/
+#renv.lock
+
+# Build artifacts
+*.Rcheck/
+*.tar.gz
+*.zip
+
+# Logs
+logs/
+*.log
