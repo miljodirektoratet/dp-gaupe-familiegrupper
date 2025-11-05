@@ -1,0 +1,22 @@
+# R files
+.Rproj.user
+.Rhistory
+.RData
+.httr-oauth
+.DS_Store
+.quarto
+
+
+# files
+TODO.md
+
+# folders
+data-raw/raw/*
+!data-raw/raw/.gitkeep
+
+# logs
+logs/*
+!logs/.gitkeep
+
+# backup files
+*.bak

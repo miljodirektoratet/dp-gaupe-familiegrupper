@@ -1,0 +1,50 @@
+Package: gaupefam
+Title: Gaupe familiegrupper (Lynx family groups)
+Version: 0.0.0.9000
+Authors@R: c(
+    person("Willeke", "A'Campo", , "willeke.acampo@miljodir.no", role = c("cre")),
+    person("Endre Gunnar", "Ofstad", role = "aut"),
+    person("NINA", "Author", role = "aut"))
+Description: Grouping lynx observations into family groups based on spatio-temporal criteria.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Imports:
+    dplyr,
+    ggplot2,
+    scales,
+    grid,
+    scico,
+    mapproj,
+    s2,
+    sf,
+    plyr,
+    tictoc
+Suggests:
+    covr,
+    csdata,
+    csmaps,
+    devtools,
+    DT,
+    htmltools,
+    httpgd (>= 2.0.4),
+    languageserver,
+    lintr,
+    pkgdown,
+    purrr,
+    renv,
+    roxygen2,
+    stringr,
+    styler,
+    testthat (>= 3.0.0),
+    tibble,
+    usethis,
+    here,
+    knitr
+Remotes:
+    nx10/httpgd@v2.0.4
+Config/testthat/edition: 3
+Depends:
+    R (>= 4.1)
+LazyData: true

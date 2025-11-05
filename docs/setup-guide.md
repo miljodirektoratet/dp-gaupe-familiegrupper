@@ -239,7 +239,7 @@ If you have [Docker](https://docs.docker.com/engine/install/) installed and pref
     docker compose --profile dev-rstudio down
     
     # Remove the dev image (forces a full rebuild)
-    docker rmi rdevcontainer-dev-rstudio
+    docker rmi gaupefam-dev-rstudio
     
     # Rebuild with build logs for troubleshooting
     mkdir -p logs
