@@ -108,9 +108,13 @@ guide](./docs/setup-guide.md#development-container-technical-details).
 
 ### Workflow Statuses
 
-| Job      | Status       | Description            |
-|----------|--------------|------------------------|
-| job name | status-badge | description of the job |
+| Job             | Status                                                                                                                                                       | Description                                             |
+|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------|
+| **R-CMD-check** | ![Status](https://img.shields.io/github/actions/workflow/status/miljodirektoratet/dp-gaupe-familiegrupper/R-CMD-check.yaml?branch=main&label=&style=flat)    | R package validation, testing, cross-platform checks    |
+| **Lint**        | ![Status](https://img.shields.io/github/actions/workflow/status/miljodirektoratet/dp-gaupe-familiegrupper/lint.yaml?branch=main&label=&style=flat)           | Code style and quality checks using lintr               |
+| **CI Docker**   | ![Status](https://img.shields.io/github/actions/workflow/status/miljodirektoratet/dp-gaupe-familiegrupper/ci-docker-prod.yaml?branch=main&label=&style=flat) | Build and test Docker image                             |
+| **CD Docker**   | ![Status](https://img.shields.io/github/actions/workflow/status/miljodirektoratet/dp-gaupe-familiegrupper/cd-docker-prod.yaml?label=&style=flat)             | Container deployment to GitHub Registry                 |
+| **Dependabot**  |                                                                                                                                                              | Automated dependency updates and vulnerability scanning |
 
 ## Getting Started
 
