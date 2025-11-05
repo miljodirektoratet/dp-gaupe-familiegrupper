@@ -1,0 +1,94 @@
+# usefull commands:
+# pre-commit install
+# pre-commit run --files <file1> <file2>
+# pre-commit run --files R/*
+# pre-commit run --all-files
+# pre-commit uninstall
+repos:
+# Basic file checks
+# pre-commit-hooks: MIT License
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v6.0.0
+  hooks:
+    - id: check-added-large-files
+    - id: check-json
+      exclude: '\.vscode/.*|\.devcontainer/.*'
+    - id: check-toml
+    - id: check-yaml
+    - id: end-of-file-fixer
+      exclude: '\.Rd' # sometimes roxygen fails to generate EOF blank line.
+    - id: file-contents-sorter
+      files: '^\.Rbuildignore$'
+    - id: trailing-whitespace
+# R package checks
+# lorenzwalthert/precommit: GPL-3 License
+-   repo: https://github.com/lorenzwalthert/precommit
+    rev: v0.4.3.9014
+    hooks:
+    -   id: style-files
+        args: [--style_pkg=styler, --style_fun=tidyverse_style, --cache-root=styler-perm]
+        exclude: >
+          (?x)^(
+          tests/testthat/in/.*|
+          renv/.*|
+          dump/.*
+          )$
+    -   id: roxygenize
+        additional_dependencies:
+        -    cli
+        -    fs
+        -    here
+        -    magrittr
+        -    purrr
+        -    R.cache
+        -    rlang
+        -    rprojroot
+        -    rstudioapi
+        -    withr
+        -    yaml
+        -    r-lib/pkgapi
+        -    dplyr
+        -    ggplot2
+        -    tibble
+        -    scales
+        -    csmaps
+        -    csdata
+        -    scico
+        -    mapproj
+    -   id: use-tidy-description
+    -   id: readme-rmd-rendered
+    -   id: parsable-R
+        exclude: >
+          (?x)^(
+          tests/testthat/in/.*|
+          dump/.*
+          )$
+    -   id: no-browser-statement
+        exclude: >
+          (?x)^(
+          tests/testthat/in/.*|
+          dump/.*
+          )$
+    -   id: no-debug-statement
+        exclude: >
+          (?x)^(
+          tests/testthat/in/.*|
+          dump/.*
+          )$
+    -   id: deps-in-desc
+        exclude: >
+          (?x)^(
+          inst/hooks/exported/pkgdown.R|
+          tests/testthat/in/.*|
+          inst/update-renv-prepare.R|
+          inst/update-ppm-url.R|
+          inst/update-dependency-graph-existing-packages\.R|
+          inst/update-existing-hook-dependencies\.R|
+          renv/activate.R|
+          vignettes/FAQ\.Rmd|
+          scripts/.*|
+          dump/.*
+          )$
+    # -   id: pkgdown
+
+default_stages: ["pre-commit"]

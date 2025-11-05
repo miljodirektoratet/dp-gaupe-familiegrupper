@@ -1,0 +1,34 @@
+version: '3.8'
+services:
+  # VS Code development environment
+  vscode:
+    container_name: gaupefam-vscode
+    profiles:
+      - vscode
+    build:
+      context: ..
+      dockerfile: .devcontainer/dev.Dockerfile
+    volumes:
+      - ./docker.Rprofile:/home/rstudio/workspace/.Rprofile:ro
+      - ../:/home/rstudio/workspace:cached
+    environment:
+      - R_PROFILE_USER=/home/rstudio/workspace/.Rprofile
+      - RENV_PATHS_CACHE=/renv/cache
+    command: sleep infinity
+  # RStudio Server development environment
+  rstudio:
+    container_name: gaupefam-rstudio
+    profiles:
+      - rstudio
+    build:
+      context: ..
+      dockerfile: .devcontainer/dev.Dockerfile
+    volumes:
+      - ./docker.Rprofile:/home/rstudio/workspace/.Rprofile:ro
+      - ../:/home/rstudio/workspace
+    environment:
+      - DISABLE_AUTH=true
+      - R_PROFILE_USER=/home/rstudio/workspace/.Rprofile
+    ports:
+      - "8787:8787"
+    command: /init
