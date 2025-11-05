@@ -1,0 +1,43 @@
+# CODE QUALITY AND LINTING
+# DATA AND OUTPUT DIRECTORIES
+# DEVELOPMENT AND DOCUMENTATION FILES
+# DEVELOPMENT ENVIRONMENT
+# DOCKER AND CONTAINERIZATION
+# PACKAGE MANAGEMENT
+# R PROJECT FILES
+# TEMPORARY AND CACHE FILES
+# VERSION CONTROL
+^.*\.Dockerfile$
+^.*\.Rproj$
+^LICENSE\.md$
+^README\.Rmd$
+^README\.md$
+^TODO\.md$
+^Thumbs\.db$
+^\.DS_Store$
+^\.RData$
+^\.Rhistory$
+^\.Rprofile$
+^\.Rproj\.user$
+^\.Ruserdata$
+^\.devcontainers$
+^\.dockerignore$
+^\.git$
+^\.github$
+^\.gitignore$
+^\.httr-oauth$
+^\.lintr$
+^\.pre-commit-config\.yaml$
+^\.vscode$
+^command-cheatsheet\.md$
+^compose\.yaml$
+^compose\.yml$
+^container-setup\.md$
+^data-raw$
+^dump$
+^logs$
+^notebooks$
+^renv$
+^renv\.lock$
+^renv\.lock\..*\.bak$
+^scripts$

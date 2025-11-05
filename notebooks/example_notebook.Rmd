@@ -1,0 +1,123 @@
+---
+title: "Trøndelag Plot Example"
+author: "Willeke A'Campo"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+---
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "60%",
+  fig.width = 6,
+  fig.height = 4.5,
+  dpi = 300,
+  dev.args = list(bg = "transparent")
+)
+```
+
+
+# Interactive Trøndelag Plot Example
+
+This R Markdown notebook demonstrates how to create an interactive plot of Trøndelag counties using the `gaupefam` package functions.
+
+## 1. Load Required Libraries and Data
+
+First, we'll load the necessary libraries and source our plotting functions.
+
+```{r load-libraries}
+# Load the gaupefam package
+library(gaupefam)
+
+gaupefam::hello()
+
+# Metadata for package data
+print(paste("Counties geodata rows:", nrow(no_county_geodata_2024)))
+print(paste("County names:", nrow(no_county_names_2024)))
+head(no_county_names_2024)
+```
+
+## 2. Basic Trøndelag Plot
+
+Let's create the basic Trøndelag plot using the default settings:
+
+```{r basic-plot, fig.width=10, fig.height=8}
+# Create the basic Trøndelag plot
+map <- plot_trondelag()
+
+# Display the plot
+print(map)
+```
+
+## 3. Customized Trøndelag Plot
+
+Now let's customize the colors and legend position:
+
+```{r custom-plot, fig.width=10, fig.height=8}
+# Create a customized plot with different colors
+customized_map <- plot_trondelag(
+  trondelag_color = "#2E86AB", # Blue for Trøndelag
+  other_color = "#F18F01", # Orange for other counties
+  legend_position = c(0.8, 0.8) # Move legend to top right
+)
+
+# Display the plot
+print(customized_map)
+```
+
+
+## 4. Exploring the Data
+
+Let's examine what counties are included in Trøndelag:
+
+```{r explore-data}
+# Filter for Trøndelag counties
+trondelag_counties <- no_county_names_2024 %>%
+  filter(grepl("Trøndelag", location_name, ignore.case = TRUE))
+
+print("Trøndelag counties in the dataset:")
+print(trondelag_counties)
+
+# Count total counties
+total_counties <- nrow(no_county_names_2024)
+trondelag_count <- nrow(trondelag_counties)
+
+cat("\nTotal counties:", total_counties)
+cat("\nTrøndelag counties:", trondelag_count)
+```
+
+
+## 5. Saving the Plot (Optional)
+
+If you want to save any of these plots, you can use:
+
+```{r save-plot, eval=FALSE}
+# Save as PNG
+ggsave("trondelag_plot.png", plot = p1, width = 10, height = 8, dpi = 300)
+
+# Save as PDF
+ggsave("trondelag_plot.pdf", plot = p1, width = 10, height = 8)
+
+# Save interactive plot as HTML
+htmlwidgets::saveWidget(interactive_plot, "trondelag_interactive.html")
+```
+
+## Summary
+
+This notebook demonstrated:
+
+1. Loading the gaupefam package data and functions
+2. Creating basic Trøndelag plots with `plot_trondelag()`
+3. Customizing colors and legend positions
+4. Creating interactive versions with plotly
+5. Exploring the underlying data
+6. Trying different visual styles
+
+The `plot_trondelag()` function provides a flexible way to highlight Trøndelag counties on a map of Norway with customizable styling options.
