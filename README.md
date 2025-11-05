@@ -1,1 +1,284 @@
-# dp-gaupe-familiegrupper
+# R package | dp-gaupe-familiegrupper
+
+<!-- badges: start -->
+
+[![R-CMD-check](https://github.com/miljodirektoratet/dp-gaupe-familiegrupper/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/miljodirektoratet/dp-gaupe-familiegrupper/actions/workflows/R-CMD-check.yaml)
+[![lint](https://github.com/miljodirektoratet/dp-gaupe-familiegrupper/actions/workflows/lint.yaml/badge.svg)](https://github.com/miljodirektoratet/dp-gaupe-familiegrupper/actions/workflows/lint.yaml)
+<!-- [![Codecov test coverage](https://codecov.io/gh/miljodirektoratet/dp-gaupe-familiegrupper/graph/badge.svg)](https://app.codecov.io/gh/miljodirektoratet/dp-gaupe-familiegrupper) -->
+<!-- badges: end -->
+
+R package **gaupefam** for clustering lynx observations into family groups using spatio-temporal analysis. Integrated into the **dp-gaupe-familiegrupper** data pipeline for automated processing via Databricks jobs or Docker cron scheduling.
+
+> **Note on Naming**: This repository is named `dp-gaupe-familiegrupper` (the data pipeline), but the R package itself is called `gaupefam`. When installing, use the repository name; when using the package in R code, use the package name.
+
+**Table of Contents:**
+
+- [Project Overview](#project-overview)
+  - [Key Features](#key-features)
+  - [Repository Structure](#repository-structure)
+  - [Docker Configuration](#docker-configuration)
+  - [Workflow Statuses](#workflow-statuses)
+- [Getting Started](#getting-started)
+  - [Pipeline Deployment Options](#pipeline-deployment-options)
+  - [Development Installation](#development-installation)
+- [Development](#development)
+  - [Prerequisites](#prerequisites)
+  - [Development Setup](#development-setup)
+  - [Development Workflow](#development-workflow)
+  - [Code Quality Standards](#code-quality-standards)
+  - [GHA Workflows](#gha-workflows)
+  - [Branch Protection](#branch-protection)
+- [Documentation](#documentation)
+- [Acknowledgements](#acknowledgements)
+- [License](#license)
+
+## Project Overview
+
+This R package is developed and maintained by the Norwegian Environment Agency (NEA) together with the Norwegian Institute for Nature Research (NINA). It provides clustering functionality for grouping lynx observations into family groups based on spatio-temporal criteria.
+
+**Data Pipeline Integration**: The package is a core component of NEA's **dp-gaupe-familiegrupper** data product pipeline. Feature engineering is performed upstream using Python on Databricks, while this package handles the R-based cluster analysis. The pipeline runs either as:
+
+- **Scheduled Databricks jobs** for automated processing
+- **Docker cron jobs** for containerized deployment scenarios
+
+**Workflow**: Python feature engineering (Databricks) → R clustering analysis (this package) → Output to unity catalog.
+
+For more information about the data product, see the [Confluence page](https://miljodir.atlassian.net/wiki/spaces/DDO/pages/11201347593/Rovbase+gaupe+familiegrupper+ikke+i+IT-produktoversikten).
+
+### Key Features
+
+- **Lynx clustering analysis**: Groups lynx observations into family units using spatio-temporal criteria
+- **Pipeline integration**: Designed for integration with Databricks and Docker-based data pipelines
+- **Reproducible environments**: Docker containers and renv for consistent package versions
+- **Quality assurance**: Automated testing, code quality checks, and security scanning via GitHub Actions
+
+### Repository Structure
+
+Important configurations files are listed below, full overview of the repository structure is available in the [Repository Structure](./docs/repo-structure.md) documentation.
+
+| File/Directory            | Purpose                             |
+|---------------------------|-------------------------------------|
+| `.devcontainer/`          | VS Code dev container configuration |
+| `.github/workflows/`      | GitHub Actions for CI/CD            |
+| `.pre-commit-config.yaml` | Pre-commit hook configuration       |
+| `renv/`                   | renv package management             |
+| `renv.lock`               | Locked package versions             |
+| `DESCRIPTION`             | Package metadata                    |
+| `Taskfile.yml`            | Task automation configuration       |
+
+### Docker Configuration
+
+This project includes multiple Docker configurations to support different development and deployment scenarios:
+
+- **RStudio Server (dev)**: Web-based development environment running on <http://localhost:8787>
+- **VS Code/Codespaces (dev)**: Development environment with Radian console and VS Code extensions running in Codespaces or local VS Code with Dev Containers extension
+- **Production (prod)**: Minimal runtime container with only package dependencies
+
+For detailed development container configuration and customization instructions, see the [setup guide](./docs/setup-guide.md#development-container-technical-details).
+
+### Workflow Statuses
+
+| Job | Status | Description |
+|---|---|---|
+| job name | status-badge | description of the job |
+
+## Getting Started
+
+This R package is designed for integration into data pipelines and is installed directly from GitHub. Choose your deployment method based on your pipeline infrastructure:
+
+### Pipeline Deployment Options
+
+#### Databricks Integration (Recommended)
+
+For scheduled data processing in Databricks environments:
+
+```R
+# Install in Databricks R notebook
+install.packages("remotes")
+remotes::install_github("miljodirektoratet/dp-gaupe-familiegrupper")
+
+# Load and use in your analysis
+library(gaupefam)
+# Your clustering analysis code here...
+```
+
+**Scheduling**: Configure Databricks jobs to run R notebooks containing the clustering analysis on a scheduled basis (daily, weekly, etc.).
+
+#### Docker Cron Integration
+
+For containerized environments with cron-based scheduling that access Unity Catalog on Databricks (not yet tested):
+
+```bash
+# Run pipeline with data stored in Unity Catalog
+docker run --rm \
+  -e DATABRICKS_HOST="https://your-databricks-instance.cloud.databricks.com" \
+  -e DATABRICKS_TOKEN="your-token" \
+  ghcr.io/miljodirektoratet/dp-gaupe-familiegrupper:latest \
+  Rscript docker-entrypoint-databricks.R
+
+# Run pipeline with data stored in a local volume
+docker run --rm \
+  -v /path/to/local/data:/data \
+  ghcr.io/miljodirektoratet/dp-gaupe-familiegrupper:latest \
+  Rscript docker-entrypoint-local-volume.R
+```
+
+**Scheduling**: Set up cron jobs to run the Docker container at desired intervals.
+
+```bash
+# Schedule with cron (example)
+# 0 2 * * * docker run --rm -e DATABRICKS_HOST="$DATABRICKS_HOST" -e DATABRICKS_TOKEN="$DATABRICKS_TOKEN" ghcr.io/miljodirektoratet/dp-gaupe-familiegrupper:latest Rscript docker-entrypoint.R
+```
+
+### Development Installation
+
+For package development or testing outside of pipeline environments:
+
+```R
+# Standard development installation
+install.packages("remotes")
+remotes::install_github("miljodirektoratet/dp-gaupe-familiegrupper")
+
+# Load and test basic functionality  
+library(gaupefam)
+hello()
+#> 🚀 Hello from gaupefam !
+
+# Test plotting capabilities
+map <- plot_trondelag()
+map
+```
+
+## Development
+<!-- For contributors -->
+
+> [!TIP]
+> **Recommended Setup:** Use [VS Code Devcontainers](https://code.visualstudio.com/docs/devcontainers/containers) for a consistent containerized environment. Alternative options available are:
+>
+> - **RStudio Devcontainer**: Web-based RStudio Server in Docker
+> - **Local Setup**: Native environment using `renv` package management
+>
+> For RStudio devcontainer or local setup instructions, see the comprehensive [setup guide](./docs/setup-guide.md).
+
+The following steps configure your development environment using VS Code Dev Containers.
+
+### Prerequisites
+<!-- Software versions, system requirements, dependencies, account requirements (APIs, services) -->
+
+- [Docker](https://docs.docker.com/engine/install/)
+- [Visual Studio Code](https://code.visualstudio.com/)
+- [VS Code Dev Containers](https://code.visualstudio.com/docs/devcontainers/containers)
+extension
+
+### Development Setup
+<!-- Step-by-step installation guide -->
+
+1. **Open the project**: Clone and open the project folder in VS Code or use [GitHub Codespaces](https://docs.github.com/en/codespaces).
+
+2. **Start the devcontainer**: When prompted, reopen the folder in the Devcontainer. If not prompted, manually trigger it via the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`) and select "Dev Containers: Reopen in Container".
+
+3. **Automatic setup**: The devcontainer automatically:
+   - Configures VS Code with recommended settings and extensions per [devcontainer.json](.devcontainer/devcontainer.json)
+   - Installs development tools: [Git](https://git-scm.com/), [pre-commit](https://pre-commit.com/), [Task](https://taskfile.dev/installation/)
+   - Sets up the R environment with dependencies in `renv` via `task dev-setup`, which runs `renv::init()` and executes code quality checks (`devtools::check()`) and tests (`devtools::test()`).
+
+4. **Test the installation with Task commands**:
+
+    Task is used to automate common development tasks *(see [Taskfile.yml](Taskfile.yml))*.
+
+   ```bash
+   # Test the package
+   task run
+
+   # Run quality checks
+   task check
+
+   # Run local CI workflow
+   task ci-local
+
+   # Clean up
+   task clean
+   ```
+
+5. **Test the notebook**: Open `notebooks/demo.ipynb` and select the `.venv` kernel. If you have problems activating the `.venv` refer to the [setup guide](./docs/setup-guide.md).
+
+6. **Configure the GitHub Repository**: If you fork this repository or use it to create a new repository from scratch, you'll need to ensure your GitHub repository is correctly configured. This repository has no secrets and variables configured for GitHub Actions, but you should verify that your **security scans** are properly set up. See the **GitHub Repository Configuration** section in the [setup guide](./docs/setup-guide.md) for instructions.
+
+### Development Workflow
+
+1. **Create branch**: create a new `feat/<name>` or bug fix `fix/<name>` branch using Git.
+2. **Write Code**: develop your package functions in `R/`.
+3. **Document**: use `roxygen2` comments and run
+    `devtools::document()`.
+4. **Test**: write tests in `tests/testthat/` and run
+    `devtools::test()`.
+5. **Check**: run `devtools::check()` to ensure your package passes all
+    checks.
+6. **README**: update `README.Rmd` and build with
+    `devtools::build_readme()`.
+7. **Commit**: stage and commit changes using Git, pre-commit hooks
+    will run automatically.
+8. **Push**: push your branch to GitHub and create a pull request for
+    review, GitHub Actions will run tests automatically.
+
+See [Command Cheat Sheet](./docs/command-cheatsheet.md) for common commands.
+
+### Code Quality Standards
+
+Follow R coding standards with roxygen2 documentation, consistent formatting via styler, and comprehensive testing with testthat. All quality checks are automated through Task commands, pre-commit hooks and CI workflows.
+
+See the [Code Quality and Security Standards](./docs/code-and-security-standards.md) guide to see which rules are enforced in this repo.
+
+### GHA Workflows
+
+The repository includes automated workflows for code quality, security, and deployment:
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| **R-CMD-check** | `push`, `pull_request` to `main` | R package validation, testing, cross-platform checks |
+| **lint** | `push`, `pull_request` to `main` | Code style and quality checks using lintr |
+| **CI Docker** | `push` to `main` | Docker build and Test |
+| **CD Docker** | `push` to `main` with version tags | Container deployment to GitHub Registry |
+| **CodeQL Analysis** | `push`, `pull_request`, `schedule` | Code security analysis |
+| **Dependabot** | `schedule` | Automated dependency updates and vulnerability scanning |
+| **Zizmor Security** | `push`, `pull_request` | GitHub Actions workflow security auditing |
+
+The R package workflows ensure code quality and compatibility across different R versions and operating systems. The **R-CMD-check** workflow is the standard for R package validation, while **lint** ensures consistent code style following the project's configuration.
+
+### Branch Protection
+
+The `main` branch is protected with the following rules:
+
+- Require pull request reviews before merging
+- Require status checks to pass before merging
+- Require branches to be up to date before merging
+
+## Documentation
+
+- **Data Product Documentation**: [Confluence page](https://miljodir.atlassian.net/wiki/spaces/DDO/pages/11201347593/Rovbase+gaupe+familiegrupper+ikke+i-IT-produktoversikten)
+- **Development Guides**: See [`/docs`](./docs/) folder:
+  - [Setup Guide](./docs/setup-guide.md)
+  - [Code Quality and Security Standards](./docs/code-and-security-standards.md)
+  - [Command Cheatsheet](./docs/command-cheatsheet.md)
+  - [Repository Structure](./docs/repo-structure.md)
+
+## Acknowledgements
+
+This repository leverages the following tools from the R community:
+
+- **Pre-commit hooks**:
+  - [pre-commit-hooks](https://github.com/pre-commit/pre-commit-hooks)
+  - [lorenzwalthert/precommit](https://github.com/lorenzwalthert/precommit)
+- **Development practices** from [R Packages (2e)](https://r-pkgs.org/)
+  by Hadley Wickham and Jenny Bryan
+- **Docker images** from the [Rocker
+  Project](https://rocker-project.org/)
+- **ggmap**: D. Kahle and H. Wickham. ggmap: Spatial Visualization with
+  ggplot2. The R Journal, 5(1), 144-161. URL
+  <http://journal.r-project.org/archive/2013-1/kahle-wickham.pdf>
+
+## License
+
+The package **dp-gaupe-familiegrupper** is released under the MIT License. See [LICENSE](LICENSE) file for details.
+
+---
