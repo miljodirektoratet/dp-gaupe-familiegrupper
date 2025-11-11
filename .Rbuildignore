@@ -29,6 +29,7 @@
 ^\.lintr$
 ^\.pre-commit-config\.yaml$
 ^\.vscode$
+^\.devcontainer
 ^command-cheatsheet\.md$
 ^compose\.yaml$
 ^compose\.yml$
