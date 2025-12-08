@@ -1,11 +1,11 @@
 # R files
 .Rproj.user
+.Rprofile
 .Rhistory
 .RData
 .httr-oauth
 .DS_Store
 .quarto
-
 
 # files
 TODO.md
@@ -13,6 +13,8 @@ TODO.md
 # folders
 data-raw/raw/*
 !data-raw/raw/.gitkeep
+dump/hidden/*
+
 
 # logs
 logs/*
@@ -20,3 +22,10 @@ logs/*
 
 # backup files
 *.bak
+
+# env
+config.share
+
+# data
+data/delta-share-download/*
+!data/delta-share-download/.gitkeep
