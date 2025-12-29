@@ -20,7 +20,9 @@ Imports:
     s2,
     sf,
     plyr,
-    tictoc
+    tictoc,
+    terra,
+    arrow
 Suggests:
     covr,
     csdata,
@@ -41,7 +43,11 @@ Suggests:
     tibble,
     usethis,
     here,
-    knitr
+    knitr,
+    leaflet,
+    leaflet.extras2, 
+    viridis,
+    mapview
 Remotes:
     nx10/httpgd@v2.0.4
 Config/testthat/edition: 3
