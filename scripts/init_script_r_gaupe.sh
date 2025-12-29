@@ -48,8 +48,8 @@ apt-get install -y \
 echo "Installing pandoc..."
 apt-get install -y pandoc
 
-# Set environment variables for renv
-# Shared Cache and library paths across clusters
-export RENV_PATHS_CACHE=/dbfs/cache/geospatial/R/renv/cache
-export RENV_PATHS_LIBRARY=/dbfs/cache/geospatial/R/gaupe_familiegrupper/renv/library
+# Set environment variables for renv (set in cluster config)
+# Persistent cache across clusters
+# export RENV_PATHS_CACHE=/Volumes/dw_dev/gold_gaupe_familiegrupper_datagrunnlag/scripts/renv/cache
+
 echo "Installation completed successfully!"
