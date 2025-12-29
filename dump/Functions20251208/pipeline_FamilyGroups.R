@@ -14,19 +14,19 @@ library(leaflet.extras2)
 library(viridis)
 library(htmlwidgets)
 
-source("Functions/Function_GroupLynxOld_MultipleStart_Ver2.R")
-source("Functions/Function_GroupLynxOld_Ver2.R")
+source("/home/rstudio/workspace/dump/Functions20251208/Functions/Function_GroupLynxOld_MultipleStart_Ver2.R")
+source("/home/rstudio/workspace/dump/Functions20251208/Functions/Function_GroupLynxOld_Ver2.R")
 
 ################################################################################
 # ----------- Inspect data
 ################################################################################
 
-dat_pnt<-read_parquet("Data/gaupe_familiegrupper_datagrunnlag/rovviltobservasjon_punkt.geoparquet")
-dat_spor<-read_parquet("Data/gaupe_familiegrupper_datagrunnlag/rovviltobservasjon_spor.geoparquet")
-dat_spor_pnt<-read_parquet("Data/gaupe_familiegrupper_datagrunnlag/rovviltobservasjon_spor_pnt.geoparquet")
 
-dod<-read_parquet("Data/gaupe_familiegrupper_datagrunnlag/doderovdyr_punkt.geoparquet")
-datagrunnlag<-read_parquet("Data/gaupe_familiegrupper_datagrunnlag/gaupe_familiegrupper_datagrunnlag.geoparquet")
+dat_pnt <- read_parquet("/home/rstudio/workspace/dump/hidden/data/rovviltobservasjon_punkt.geoparquet")
+dat_spor <- read_parquet("/home/rstudio/workspace/dump/hidden/data/rovviltobservasjon_spor.geoparquet")
+dat_spor_pnt <- read_parquet("/home/rstudio/workspace/dump/hidden/data/rovviltobservasjon_spor_pnt.geoparquet")
+dod <- read_parquet("/home/rstudio/workspace/dump/hidden/data/doderovdyr_punkt.geoparquet")
+datagrunnlag <- read_parquet("/home/rstudio/workspace/dump/hidden/data/gaupe_familiegrupper_datagrunnlag.geoparquet")
 
 # Convert geometry
 dod$geometry <- st_as_sfc(structure(as.list(dod$geometri_wkb), class = "WKB"), crs=3006)
