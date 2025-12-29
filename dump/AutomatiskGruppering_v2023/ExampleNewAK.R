@@ -106,6 +106,7 @@ for(i in rovbaseIDs){
 # R559946 is also wrong, but not that much
 # Issues like these should ideally be picked up through quality control
 
+
 x=vector()
 for(i in 1:385){
   x[i]<-distm[i,i]
@@ -116,6 +117,7 @@ rovbaseIDs[which.max(x)]
 
 for(i in 1:385){
   distm[i,i]<-0
+}
 
 
 # Reorder, so the order in the data are the same

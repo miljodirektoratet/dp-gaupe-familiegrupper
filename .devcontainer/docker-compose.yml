@@ -8,12 +8,14 @@ services:
     build:
       context: ..
       dockerfile: .devcontainer/dev.Dockerfile
+    user: "1000:1000"
     volumes:
-      - ./docker.Rprofile:/home/rstudio/workspace/.Rprofile:ro
+      - ./docker.Rprofile:/home/rstudio/workspace/.Rprofile
       - ../:/home/rstudio/workspace:cached
+      - renv-cache:/home/rstudio/cache
     environment:
       - R_PROFILE_USER=/home/rstudio/workspace/.Rprofile
-      - RENV_PATHS_CACHE=/renv/cache
+      - RENV_PATHS_CACHE=/home/rstudio/cache
     command: sleep infinity
   # RStudio Server development environment
   rstudio:
@@ -23,12 +25,17 @@ services:
     build:
       context: ..
       dockerfile: .devcontainer/dev.Dockerfile
+    user: "1000:1000"
     volumes:
       - ./docker.Rprofile:/home/rstudio/workspace/.Rprofile:ro
       - ../:/home/rstudio/workspace
+      - renv-cache:/home/rstudio/cache
     environment:
       - DISABLE_AUTH=true
       - R_PROFILE_USER=/home/rstudio/workspace/.Rprofile
+      - RENV_PATHS_CACHE=/home/rstudio/cache
     ports:
       - "8787:8787"
     command: /init
+volumes:
+  renv-cache:
