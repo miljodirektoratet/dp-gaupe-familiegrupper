@@ -42,11 +42,10 @@ generate_county_colors <- function(names_df, palette_name = "batlow") {
 #' @param legend_position Position of the legend (default: c(0.9, 0.2))
 #' @return ggplot object of the Norway county map
 plot_norway_counties <- function(
-  map_df = no_county_geodata_2024,
-  names_df = no_county_names_2024,
-  palette_name = "batlow",
-  legend_position = c(0.9, 0.2)
-) {
+    map_df = no_county_geodata_2024,
+    names_df = no_county_names_2024,
+    palette_name = "batlow",
+    legend_position = c(0.9, 0.2)) {
   # Prepare palette
   county_colors <- generate_county_colors(names_df, palette_name)
 
@@ -97,12 +96,11 @@ plot_norway_counties <- function(
 #' @return ggplot object of the Norway county map with Trondelag highlighted
 #' @export
 plot_trondelag <- function(
-  geodata_df = no_county_geodata_2024,
-  names_df = no_county_names_2024,
-  trondelag_color = "#005E5D",
-  other_color = "#FCFAF6",
-  legend_position = c(0.7, 0.1)
-) {
+    geodata_df = no_county_geodata_2024,
+    names_df = no_county_names_2024,
+    trondelag_color = "#005E5D",
+    other_color = "#FCFAF6",
+    legend_position = c(0.7, 0.1)) {
   # Prepare data
   map_df <- geodata_df |>
     dplyr::left_join(

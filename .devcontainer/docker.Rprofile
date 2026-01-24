@@ -13,11 +13,14 @@ cat("Docker | R Development Environment\n")
 cat("RENV_PROJECT:", Sys.getenv("RENV_PROJECT"), "\n")
 cat("R version:", R.version.string, "\n")
 if (requireNamespace("renv", quietly = TRUE)) {
-  tryCatch({
-    cat("renv version:", as.character(utils::packageVersion("renv")), "\n")
-  }, error = function(e) {
-    # Silently skip if utils isn't loaded yet
-  })
+  tryCatch(
+    {
+      cat("renv version:", as.character(utils::packageVersion("renv")), "\n")
+    },
+    error = function(e) {
+      # Silently skip if utils isn't loaded yet
+    }
+  )
 }
 
 # configure

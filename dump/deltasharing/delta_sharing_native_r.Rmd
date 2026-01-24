@@ -1,0 +1,463 @@
+---
+title: "Delta Sharing Native R Package"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Introduction
+
+This notebook demonstrates how to use the native R `delta.sharing` package from GitHub (zacdav-db/delta-sharing-r). This package provides a pure R implementation for Delta Sharing without requiring Python integration.
+
+## Installation
+
+```{r install-package, eval=FALSE}
+# Install the native R delta.sharing package from GitHub
+# Note: This may require increasing C stack limits inside Docker containers.
+# Recommended to run locally and not inside a container if possible.
+
+# Method 1: Standard installation
+remotes::install_github("zacdav-db/delta-sharing-r")
+
+# Method 2: If you encounter C stack issues (common in containers)
+# First install dependencies separately:
+# install.packages(c("bit", "hms", "bit64", "assertthat", "progress"))
+# Sys.setenv("LIBARROW_MINIMAL" = "false")
+# install.packages("arrow")
+
+# Then install the main package:
+# options(expressions = 500000)
+# Sys.setenv("R_C_STACK_LIMIT" = "2147483647")
+# remotes::install_github("zacdav-db/delta-sharing-r")
+```
+
+## Check Installation
+
+```{r check-installation}
+# Check if the package is installed and load it
+if (requireNamespace("delta.sharing", quietly = TRUE)) {
+  library(delta.sharing)
+  cat("✅ delta.sharing package loaded successfully\n")
+  cat("Package version:", packageVersion("delta.sharing"), "\n")
+} else {
+  cat("❌ delta.sharing package not installed\n")
+  cat("Please run the installation code above\n")
+  knitr::knit_exit()
+}
+```
+
+## Load Additional Libraries
+
+```{r load-libraries}
+library(dplyr)     # For data manipulation
+library(ggplot2)   # For plotting
+library(jsonlite)  # For config file reading
+```
+
+## Load Configuration
+
+```{r load-config}
+# Read the Delta Sharing configuration
+cat("Current working directory:", getwd(), "\n")
+
+config_path <- "../config.share"
+
+# Check if file exists and read it
+if (!file.exists(config_path)) {
+  # Try absolute path if relative doesn't work
+  config_path <- "/home/rstudio/workspace/config.share"
+  cat("Trying absolute path:", config_path, "\n")
+}
+
+cat("Using config file:", config_path, "\n")
+cat("File exists:", file.exists(config_path), "\n")
+
+# Read configuration
+config <- jsonlite::fromJSON(config_path)
+cat("Endpoint:", config$endpoint, "\n")
+cat("Token expires:", config$expirationTime, "\n")
+
+# Check if token is expiring soon
+expiry_date <- as.POSIXct(config$expirationTime, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC")
+current_date <- Sys.time()
+time_until_expiry <- difftime(expiry_date, current_date, units = "hours")
+
+cat("Time until token expires:", round(as.numeric(time_until_expiry), 2), "hours\n")
+
+if (time_until_expiry < 24) {
+  cat("⚠️  WARNING: Token expires within 24 hours!\n")
+}
+```
+
+## Create Delta Sharing Client
+
+```{r create-client}
+# Create a Delta Sharing client using the configuration file
+# The delta.sharing package should provide a client function
+
+# Check available functions in the package
+cat("Available functions in delta.sharing:\n")
+print(ls("package:delta.sharing"))
+
+# Create client (syntax will depend on the package implementation)
+# Common patterns might be:
+tryCatch({
+  # Try different possible function names
+  if (exists("delta_sharing_client")) {
+    client <- delta_sharing_client(config_path)
+    cat("✅ Client created with delta_sharing_client()\n")
+  } else if (exists("DeltaSharingClient")) {
+    client <- DeltaSharingClient(config_path)
+    cat("✅ Client created with DeltaSharingClient()\n")
+  } else if (exists("sharing_client")) {
+    client <- sharing_client(config_path)
+    cat("✅ Client created with sharing_client()\n")
+  } else {
+    cat("❓ Please check package documentation for client creation\n")
+    cat("Available functions:\n")
+    print(ls("package:delta.sharing"))
+  }
+}, error = function(e) {
+  cat("❌ Error creating client:", e$message, "\n")
+  cat("Please check the package documentation\n")
+})
+```
+
+## List Available Shares
+
+```{r list-shares}
+# List shares using the native R package
+if (exists("client")) {
+  tryCatch({
+    # Try different possible function names
+    if (exists("list_shares")) {
+      shares <- list_shares(client)
+    } else if (exists("client$list_shares")) {
+      shares <- client$list_shares()
+    } else {
+      cat("❓ Please check documentation for list_shares function\n")
+      shares <- NULL
+    }
+    
+    if (!is.null(shares)) {
+      cat("Available shares:\n")
+      print(shares)
+      
+      # Store first share for later use
+      if (nrow(shares) > 0) {
+        share_name <- shares$name[1]
+        cat("Using share:", share_name, "\n")
+      }
+    }
+  }, error = function(e) {
+    cat("❌ Error listing shares:", e$message, "\n")
+  })
+} else {
+  cat("❌ No client available - please check client creation above\n")
+}
+```
+
+## List Schemas
+
+```{r list-schemas}
+# List schemas in the first share
+if (exists("share_name")) {
+  tryCatch({
+    if (exists("list_schemas")) {
+      schemas <- list_schemas(client, share_name)
+    } else if (exists("client$list_schemas")) {
+      schemas <- client$list_schemas(share_name)
+    } else {
+      cat("❓ Please check documentation for list_schemas function\n")
+      schemas <- NULL
+    }
+    
+    if (!is.null(schemas)) {
+      cat("Available schemas:\n")
+      print(schemas)
+      
+      if (nrow(schemas) > 0) {
+        schema_name <- schemas$name[1]
+        cat("Using schema:", schema_name, "\n")
+      }
+    }
+  }, error = function(e) {
+    cat("❌ Error listing schemas:", e$message, "\n")
+  })
+}
+```
+
+## List Tables
+
+```{r list-tables}
+# List tables in the first schema
+if (exists("schema_name")) {
+  tryCatch({
+    if (exists("list_tables")) {
+      tables <- list_tables(client, share_name, schema_name)
+    } else if (exists("client$list_tables")) {
+      tables <- client$list_tables(share_name, schema_name)
+    } else {
+      cat("❓ Please check documentation for list_tables function\n")
+      tables <- NULL
+    }
+    
+    if (!is.null(tables)) {
+      cat("Available tables:\n")
+      print(tables)
+      
+      if (nrow(tables) > 0) {
+        table_name <- tables$name[1]
+        cat("Using table:", table_name, "\n")
+      }
+    }
+  }, error = function(e) {
+    cat("❌ Error listing tables:", e$message, "\n")
+  })
+}
+```
+
+## Load Table Data
+
+```{r load-data}
+# Load actual data from the Delta Share table
+if (exists("table_name")) {
+  tryCatch({
+    # Try different possible function names for data loading
+    if (exists("load_table")) {
+      df <- load_table(client, share_name, schema_name, table_name)
+    } else if (exists("read_table")) {
+      df <- read_table(client, share_name, schema_name, table_name)
+    } else if (exists("client$load_table")) {
+      df <- client$load_table(share_name, schema_name, table_name)
+    } else if (exists("delta_sharing_read")) {
+      df <- delta_sharing_read(client, share_name, schema_name, table_name)
+    } else {
+      cat("❓ Please check documentation for data loading function\n")
+      df <- NULL
+    }
+    
+    if (!is.null(df)) {
+      cat("✅ Data loaded successfully!\n")
+      cat("Data dimensions:", nrow(df), "rows x", ncol(df), "columns\n")
+      cat("Column names:", paste(names(df), collapse = ", "), "\n")
+      
+      # Show data structure
+      cat("\nData structure:\n")
+      str(df)
+      
+      # Show first few rows
+      cat("\nFirst 6 rows:\n")
+      print(head(df))
+    }
+  }, error = function(e) {
+    cat("❌ Error loading data:", e$message, "\n")
+  })
+}
+```
+
+## Data Analysis Example
+
+```{r data-analysis}
+# Perform basic data analysis if data was loaded successfully
+if (exists("df") && !is.null(df) && nrow(df) > 0) {
+  cat("=== DATA ANALYSIS ===\n")
+  
+  # Basic summary
+  cat("Dataset Summary:\n")
+  print(summary(df))
+  
+  # Check for missing values
+  missing_counts <- sapply(df, function(x) sum(is.na(x)))
+  if (any(missing_counts > 0)) {
+    cat("\nMissing values per column:\n")
+    print(missing_counts[missing_counts > 0])
+  }
+  
+  # Create visualizations for numeric columns
+  numeric_cols <- sapply(df, is.numeric)
+  
+  if (any(numeric_cols)) {
+    numeric_col <- names(df)[which(numeric_cols)[1]]
+    cat("\nCreating histogram for:", numeric_col, "\n")
+    
+    p1 <- ggplot(df, aes_string(x = numeric_col)) +
+      geom_histogram(bins = 30, fill = "steelblue", alpha = 0.7) +
+      labs(title = paste("Distribution of", numeric_col)) +
+      theme_minimal()
+    
+    print(p1)
+  }
+  
+  # Show categorical data summary
+  char_cols <- sapply(df, function(x) is.character(x) || is.factor(x))
+  if (any(char_cols)) {
+    char_col <- names(df)[which(char_cols)[1]]
+    cat("\nTop values in", char_col, ":\n")
+    print(head(sort(table(df[[char_col]]), decreasing = TRUE)))
+  }
+  
+} else {
+  cat("No data available for analysis\n")
+}
+```
+
+## Package Documentation
+
+```{r package-docs}
+# Display package documentation and help
+cat("=== PACKAGE INFORMATION ===\n")
+
+if (requireNamespace("delta.sharing", quietly = TRUE)) {
+  # Package description
+  desc <- packageDescription("delta.sharing")
+  cat("Package:", desc$Package, "\n")
+  cat("Version:", desc$Version, "\n")
+  cat("Title:", desc$Title, "\n")
+  cat("Description:", desc$Description, "\n")
+  cat("Author:", desc$Author, "\n")
+  
+  # List all exported functions
+  cat("\nExported functions:\n")
+  exported <- getNamespaceExports("delta.sharing")
+  for (func in exported) {
+    cat("-", func, "\n")
+  }
+  
+  cat("\nFor detailed help, use:\n")
+  cat("help(package = 'delta.sharing')\n")
+  cat("?function_name  # for specific function help\n")
+}
+```
+
+## Alternative: Manual Function Discovery
+
+```{r function-discovery}
+# If the package functions aren't obvious, explore them manually
+if (requireNamespace("delta.sharing", quietly = TRUE)) {
+  cat("=== FUNCTION DISCOVERY ===\n")
+  
+  # Get all objects in the package namespace
+  all_objects <- ls("package:delta.sharing")
+  
+  cat("All objects in package:\n")
+  for (obj in all_objects) {
+    obj_class <- class(get(obj, envir = asNamespace("delta.sharing")))
+    cat("-", obj, "(", paste(obj_class, collapse = ", "), ")\n")
+  }
+  
+  # Look for common patterns
+  client_functions <- all_objects[grepl("client|Client", all_objects)]
+  list_functions <- all_objects[grepl("list|List", all_objects)]
+  load_functions <- all_objects[grepl("load|read|Load|Read", all_objects)]
+  
+  if (length(client_functions) > 0) {
+    cat("\nPossible client functions:\n")
+    print(client_functions)
+  }
+  
+  if (length(list_functions) > 0) {
+    cat("\nPossible listing functions:\n")
+    print(list_functions)
+  }
+  
+  if (length(load_functions) > 0) {
+    cat("\nPossible data loading functions:\n")
+    print(load_functions)
+  }
+}
+```
+
+## Troubleshooting Installation
+
+```{r installation-troubleshooting}
+cat("=== INSTALLATION TROUBLESHOOTING ===\n\n")
+
+cat("If you encounter issues installing delta.sharing:\n\n")
+
+cat("1. **C Stack Limit Errors**:\n")
+cat("   - Increase stack limits before installation\n")
+cat("   - Install dependencies separately first\n")
+cat("   - Use binary packages where available\n\n")
+
+cat("2. **Arrow Installation Issues**:\n")
+cat("   - Set LIBARROW_MINIMAL environment variable\n")
+cat("   - Install system dependencies if needed\n")
+cat("   - Consider using pre-compiled arrow binaries\n\n")
+
+cat("3. **Alternative Approaches**:\n")
+cat("   - Use the Python integration notebook instead\n")
+cat("   - Use the REST API notebook for basic functionality\n")
+cat("   - Clone and build from source manually\n\n")
+
+cat("4. **renv Integration**:\n")
+cat("   After successful installation, run:\n")
+cat("   renv::snapshot()  # to capture the package in your lockfile\n\n")
+
+cat("5. **Check Installation**:\n")
+cat("   Run: library(delta.sharing) to verify installation\n")
+```
+
+## Summary
+
+```{r summary}
+cat("=== SUMMARY ===\n\n")
+
+if (requireNamespace("delta.sharing", quietly = TRUE)) {
+  cat("✅ Native R delta.sharing package is available\n")
+  cat("✅ Provides pure R implementation (no Python required)\n")
+  cat("✅ Should integrate well with renv\n")
+  
+  if (exists("df") && !is.null(df)) {
+    cat("✅ Successfully loaded data:", nrow(df), "rows\n")
+  }
+  
+  cat("\n🔧 Advantages:\n")
+  cat("- Pure R implementation\n")
+  cat("- No Python dependencies\n") 
+  cat("- Better renv integration\n")
+  cat("- Native R data types\n")
+  
+  cat("\n⚠️ Considerations:\n")
+  cat("- GitHub package (not CRAN)\n")
+  cat("- May have installation challenges in some environments\n")
+  cat("- Smaller community than Python implementation\n")
+  
+} else {
+  cat("❌ Native R delta.sharing package not installed\n")
+  cat("📋 Alternative options:\n")
+  cat("1. Use delta_sharing_python_connect.Rmd\n")
+  cat("2. Use delta_sharing_rest_api_connect.Rmd\n")
+  cat("3. Resolve installation issues and try again\n")
+}
+
+cat("\n📚 Resources:\n")
+cat("- GitHub: https://github.com/zacdav-db/delta-sharing-r\n")
+cat("- Delta Sharing Spec: https://github.com/delta-io/delta-sharing\n")
+```
+
+## Notes
+
+### About this Package:
+- **Source**: Community-maintained R implementation by zacdav-db
+- **Status**: Experimental/development package  
+- **Dependencies**: arrow, bit, bit64, and other data processing packages
+
+### Installation with renv:
+```r
+# After successful installation, capture in lockfile:
+renv::snapshot()
+
+# In future sessions or other environments:
+renv::restore()
+```
+
+### For Production Use:
+- Test thoroughly in your specific environment
+- Consider pinning to a specific commit/version
+- Have fallback options (Python or REST API approaches)
+- Monitor the GitHub repository for updates
+
+This notebook provides a framework for using the native R delta.sharing package. The exact function names and usage patterns may vary depending on the package version and API design.

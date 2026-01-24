@@ -17,12 +17,12 @@ devtools::load_all()
 gaupefam::hello()
 
 # CHECK: code quality
-lintr::lint_dir()               # Check only
-styler::style_dir(project_dir, exclude_dirs = c("renv", "dump", "packrat", ".git"))  # Fix
+lintr::lint_dir() # Check only
+styler::style_dir(project_dir, exclude_dirs = c("renv", "dump", "packrat", ".git")) # Fix
 
 # CHECK: package documentation and README
-devtools::document()      # creates docs in man/*.Rd
-devtools::build_readme()  # updates README.md based on README.Rmd
+devtools::document() # creates docs in man/*.Rd
+devtools::build_readme() # updates README.md based on README.Rmd
 
 # CHECK: package tests and checks
 devtools::test()
@@ -36,6 +36,6 @@ system("pre-commit run --all-files")
 # - remove tests from tests/testthat/
 
 # update documentation after deleting functions
-# - removes function from namespace 
+# - removes function from namespace
 # - removes functions documentation from man/*.Rd
 devtools::document()
