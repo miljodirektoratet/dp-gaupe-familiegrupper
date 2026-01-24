@@ -35,6 +35,10 @@
 ^compose\.yml$
 ^container-setup\.md$
 ^data-raw$
+^data/delta-share-download$
+^data/.*\.gitkeep$
+^Dockerfile$
+^docs$
 ^dump$
 ^logs$
 ^notebooks$
