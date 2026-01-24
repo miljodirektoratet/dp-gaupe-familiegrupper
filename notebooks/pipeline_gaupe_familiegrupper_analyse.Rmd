@@ -39,22 +39,24 @@ binaries. Refer to refer https://arrow.apache.org/docs/r/ for detailed installat
 
 ```{r setup, include=FALSE}
 # Clear workspace and load required libraries
-rm(list=ls())
+rm(list = ls())
 
 # Suppress package startup messages
-#suppressPackageStartupMessages({
+# suppressPackageStartupMessages({
 
 
 # Load libraries
-# If packages are not installed: add them to imports and install 
-# usethis::use_package("package_name") 
+# If packages are not installed: add them to imports and install
+# usethis::use_package("package_name")
 # TIP: run this  options(expressions = 50000)
 # options(expressions = 50000)
 # install.packages("arrow", type = "binary")
 
 if (!requireNamespace("arrow", quietly = TRUE)) {
-  message("Please install 'arrow' from R-Universe for best compatibility:\n",
-          "install.packages('arrow', repos = c('https://apache.r-universe.dev', 'https://cloud.r-project.org'))")
+  message(
+    "Please install 'arrow' from R-Universe for best compatibility:\n",
+    "install.packages('arrow', repos = c('https://apache.r-universe.dev', 'https://cloud.r-project.org'))"
+  )
 }
 
 # Load sf with s2 enabled
@@ -87,8 +89,8 @@ dat_pnt <- read_parquet("/home/rstudio/workspace/dump/hidden/data/20260119/input
 dat_spor <- read_parquet("/home/rstudio/workspace/dump/hidden/data/20260119/input/gaupegruppering_rovviltobservasjon_spor_lin_20260119_151357.parquet")
 dat_spor_pnt <- read_parquet("/home/rstudio/workspace/dump/hidden/data/20260119/input/gaupegruppering_rovviltobservasjon_spor_pkt_20260119_151357.parquet")
 dod <- read_parquet("/home/rstudio/workspace/dump/hidden/data/20260119/input/gaupegruppering_doede_rovdyr_pkt_20260119_151357.parquet")
-  
-# Grouping data 
+
+# Grouping data
 datagrunnlag <- read_parquet("/home/rstudio/workspace/dump/hidden/data/20260119/input/gaupe_familiegrupper_datagrunnlag_pkt_20260119_151357.parquet")
 
 prey <- st_read("/home/rstudio/workspace/dump/hidden/data/byttedyrkategori_shp/byttedyrkategori_skandinavia_tettede_hull.shp")
@@ -99,18 +101,18 @@ prey <- st_read("/home/rstudio/workspace/dump/hidden/data/byttedyrkategori_shp/b
 ```{r prepare-geometry}
 # Convert WKB geometry columns to sf objects
 
-dod$geometry <- st_as_sfc(structure(as.list(dod$geometri_wkb), class = "WKB"), crs=3006)
-dat_pnt$geometry <- st_as_sfc(structure(as.list(dat_pnt$geometri_wkb), class = "WKB"), crs=3006)
-dat_spor$geometry <- st_as_sfc(structure(as.list(dat_spor$geometri_wkb), class = "WKB"), crs=3006)
-dat_spor_pnt$geometry <- st_as_sfc(structure(as.list(dat_spor_pnt$geometri_wkb), class = "WKB"), crs=3006)
-datagrunnlag$geometry <- st_as_sfc(structure(as.list(datagrunnlag$geometri_wkb), class = "WKB"), crs=3006)
+dod$geometry <- st_as_sfc(structure(as.list(dod$geometri_wkb), class = "WKB"), crs = 3006)
+dat_pnt$geometry <- st_as_sfc(structure(as.list(dat_pnt$geometri_wkb), class = "WKB"), crs = 3006)
+dat_spor$geometry <- st_as_sfc(structure(as.list(dat_spor$geometri_wkb), class = "WKB"), crs = 3006)
+dat_spor_pnt$geometry <- st_as_sfc(structure(as.list(dat_spor_pnt$geometri_wkb), class = "WKB"), crs = 3006)
+datagrunnlag$geometry <- st_as_sfc(structure(as.list(datagrunnlag$geometri_wkb), class = "WKB"), crs = 3006)
 
 dod <- st_as_sf(dod)
 dat_pnt <- st_as_sf(dat_pnt)
 dat_spor <- st_as_sf(dat_spor)
 
 # Plot for inspection
-#plot(datagrunnlag$geometry)
+# plot(datagrunnlag$geometry)
 ```
 
 ## 4. Data Cleaning and Time Fixes
@@ -118,7 +120,7 @@ dat_spor <- st_as_sf(dat_spor)
 ```{r clean-time}
 # Ensure all RovbaseIDs are present in datagrunnlag
 stopifnot(
-all(c(unique(dat_pnt$rovbase_id), unique(dod$rovbase_id)) %in% unique(datagrunnlag$rovbase_id))
+  all(c(unique(dat_pnt$rovbase_id), unique(dod$rovbase_id)) %in% unique(datagrunnlag$rovbase_id))
 )
 
 # Datagrunnlag: aggregate MULTIPOINT geometries by rovbase_id
@@ -126,7 +128,7 @@ dat <- st_as_sf(datagrunnlag)
 
 # Observasjoner: original observations as POINT geometries.
 # Dead animals (dod) and observasjoner (dat_pnt), observations include both syns- and sporobservasjoner.
-# Sporobservasjoner are represented as points. 
+# Sporobservasjoner are represented as points.
 obs_pnt <- bind_rows(dat_pnt, dod)
 obs_pnt <- obs_pnt %>% st_cast("POINT")
 ```
@@ -139,9 +141,11 @@ obs_pnt <- obs_pnt %>% st_cast("POINT")
 
 dat_grouped <- dat %>%
   group_by(rovbase_id) %>%
-  summarize(geometry = st_union(geometry),
-            datotid_fra = datotid_fra[1],
-            datotid_til = datotid_til[1])
+  summarize(
+    geometry = st_union(geometry),
+    datotid_fra = datotid_fra[1],
+    datotid_til = datotid_til[1]
+  )
 
 dat <- st_cast(dat, "MULTIPOINT")
 
@@ -151,7 +155,7 @@ cat("Number of grouped records:", nrow(dat_grouped), "\n")
 
 # print out geometry types of dat and dat_multipoint
 # 2 = POINT, 5 = MULTIPOINT
-cat("Geometry types in original data:", unique(st_geometry_type(dat_grouped, by_geometry=TRUE)), "\n")
+cat("Geometry types in original data:", unique(st_geometry_type(dat_grouped, by_geometry = TRUE)), "\n")
 cat("Geometry types in grouped data:", unique(st_geometry_type(dat)), "\n")
 ```
 
@@ -172,21 +176,21 @@ cat("Count of records after removing NAs:", nrow(dat), "\n")
 ind <- st_intersects(dat, st_transform(prey, 3006))
 
 dat$prey <- NA
-dat[which(lengths(ind)==1),]$prey <- prey[unlist(ind[which(lengths(ind)==1)]),]$Kategori
+dat[which(lengths(ind) == 1), ]$prey <- prey[unlist(ind[which(lengths(ind) == 1)]), ]$Kategori
 
 # For multiple matches, use the prey category with most points
-for(ii in which(lengths(ind)>1)){
+for (ii in which(lengths(ind) > 1)) {
   overlaps <- ind[[ii]]
   # Cast multipoint geometry to individual points
-  points <- st_cast(st_geometry(dat[ii,]), "POINT")
+  points <- st_cast(st_geometry(dat[ii, ]), "POINT")
   points <- st_sf(geometry = points, crs = st_crs(dat))
   # Find which prey category each point falls into
-  point_intersects <- st_intersects(points, st_transform(prey[overlaps,], 3006))
+  point_intersects <- st_intersects(points, st_transform(prey[overlaps, ], 3006))
   # Count points in each prey category
   prey_counts <- table(unlist(point_intersects))
   # Get the index with most points
   max_idx <- as.numeric(names(which.max(prey_counts)))
-  dat[ii,]$prey <- prey[overlaps[max_idx],]$Kategori
+  dat[ii, ]$prey <- prey[overlaps[max_idx], ]$Kategori
 }
 ```
 
@@ -202,7 +206,7 @@ cat("prey NAs:", sum(is.na(dat$prey)), "\n")
 obs_pnt <- obs_pnt %>%
   left_join(dat %>% st_set_geometry(NULL) %>% select(rovbase_id, prey), by = "rovbase_id")
 
-# Check total number of records 
+# Check total number of records
 cat("Total number of records in dat:", nrow(dat), "\n")
 cat("Datatype of geometry column:", class(dat$geometry), "\n")
 ```
@@ -212,10 +216,12 @@ cat("Datatype of geometry column:", class(dat$geometry), "\n")
 ```{r calculate-groups}
 # Run main grouping function
 
-fam_groups <- grouplynx_diff_starts(RovbaseID = dat$rovbase_id,
-                                    activity_from = dat$datotid_fra,
-                                    activity_to = dat$datotid_til,
-                                    geometry = dat$geometry, prey_class = dat$prey, crs=3006)
+fam_groups <- grouplynx_diff_starts(
+  RovbaseID = dat$rovbase_id,
+  activity_from = dat$datotid_fra,
+  activity_to = dat$datotid_til,
+  geometry = dat$geometry, prey_class = dat$prey, crs = 3006
+)
 ```
 
 ## 8. Post-processing for Visualization
@@ -225,7 +231,7 @@ fam_groups <- grouplynx_diff_starts(RovbaseID = dat$rovbase_id,
 colnames(obs_pnt)
 colnames(dat)
 # Check structure
-#str(obs_pnt)
+# str(obs_pnt)
 
 # Check if rovbase_id exists and is unique
 "rovbase_id" %in% colnames(obs_pnt)
@@ -241,18 +247,18 @@ head(obs_pnt)
 # Prepare observation points and determine best clustering
 # Note: obs_pnt already created earlier from bind_rows(dat_pnt, dod) with prey column joined
 
-which.col = which.min(c(min(fam_groups$n.hclust), min(fam_groups$n.custom)))
-which.method = c("h_clust", "custom")[which.col]
-which.order = fam_groups$sorting[which.min(fam_groups[,(which.col+1)])]
-reversed = length(strsplit(which.order, "_")[[1]][1]) == 2
-which.order = strsplit(which.order, "_")[[1]][1]
+which.col <- which.min(c(min(fam_groups$n.hclust), min(fam_groups$n.custom)))
+which.method <- c("h_clust", "custom")[which.col]
+which.order <- fam_groups$sorting[which.min(fam_groups[, (which.col + 1)])]
+reversed <- length(strsplit(which.order, "_")[[1]][1]) == 2
+which.order <- strsplit(which.order, "_")[[1]][1]
 
-my.grouped.obs <- grouplynx(RovbaseID = dat$rovbase_id, activity_from = dat$datotid_fra, activity_to = dat$datotid_til,
-                            geometry = dat$geometry, prey_class = dat$prey, clust = which.method,
-                            which.order = which.order, reversed = reversed, pretty = FALSE, crs = 3006, save_geometry = TRUE,
-                            path = "/home/rstudio/workspace/dump/hidden/data/20260119/output/", obs_pnt = obs_pnt)
-
-
+my.grouped.obs <- grouplynx(
+  RovbaseID = dat$rovbase_id, activity_from = dat$datotid_fra, activity_to = dat$datotid_til,
+  geometry = dat$geometry, prey_class = dat$prey, clust = which.method,
+  which.order = which.order, reversed = reversed, pretty = FALSE, crs = 3006, save_geometry = TRUE,
+  path = "/home/rstudio/workspace/dump/hidden/data/20260119/output/", obs_pnt = obs_pnt
+)
 ```
 
 ## 9. Interactive Map Visualization
@@ -281,10 +287,10 @@ obs <- st_transform(obs, 4326)
 my.cent <- st_transform(my.cent, 4326)
 my.lines <- st_transform(my.lines, 4326)
 
-min.lat <- min(st_coordinates(obs)[,2]) - 0.005
-max.lat <- max(st_coordinates(obs)[,2]) + 0.005
-min.lon <- min(st_coordinates(obs)[,1]) - 0.005
-max.lon <- max(st_coordinates(obs)[,1]) + 0.005
+min.lat <- min(st_coordinates(obs)[, 2]) - 0.005
+max.lat <- max(st_coordinates(obs)[, 2]) + 0.005
+min.lon <- min(st_coordinates(obs)[, 1]) - 0.005
+max.lon <- max(st_coordinates(obs)[, 1]) + 0.005
 
 my.map <- leaflet() %>%
   addMeasure(primaryLengthUnit = "meters", primaryAreaUnit = "sqmeters") %>%
@@ -292,19 +298,29 @@ my.map <- leaflet() %>%
   addProviderTiles(providers$OpenTopoMap) %>%
   addProviderTiles("Esri.WorldImagery", group = "Esri.WorldImagery") %>%
   addScaleBar(position = "bottomleft", options = scaleBarOptions(maxWidth = 200)) %>%
-  addCircleMarkers(color = "red", opacity = 1, fillOpacity = 1,
-                   labelOptions = labelOptions(noHide = FALSE, direction = 'top', textOnly = TRUE,
-                                               style = list("font-size" = "20px")),
-                   label = my.cent$groupID1, radius = 4, data = my.cent) %>%
-  addCircleMarkers(color = "black", opacity = 2, fillOpacity = 1,
-                   labelOptions = labelOptions(noHide = FALSE, direction = 'top', textOnly = TRUE,
-                                               style = list("font-size" = "20px")),
-                   label = obs$RovbaseID, radius = 1, data = obs) %>%
+  addCircleMarkers(
+    color = "red", opacity = 1, fillOpacity = 1,
+    labelOptions = labelOptions(
+      noHide = FALSE, direction = "top", textOnly = TRUE,
+      style = list("font-size" = "20px")
+    ),
+    label = my.cent$groupID1, radius = 4, data = my.cent
+  ) %>%
+  addCircleMarkers(
+    color = "black", opacity = 2, fillOpacity = 1,
+    labelOptions = labelOptions(
+      noHide = FALSE, direction = "top", textOnly = TRUE,
+      style = list("font-size" = "20px")
+    ),
+    label = obs$RovbaseID, radius = 1, data = obs
+  ) %>%
   addPolylines(color = "black", opacity = 1, fillOpacity = 1, data = my.lines, weight = 3) %>%
   addPolylines(color = "black", opacity = 1, fillOpacity = 1, data = dat_spor, weight = 0.5) %>%
-  addLayersControl(position = "topleft", overlayGroups = as.character(sort(unique(obs$RS))),
+  addLayersControl(
+    position = "topleft", overlayGroups = as.character(sort(unique(obs$RS))),
     options = layersControlOptions(collapsed = TRUE),
-    baseGroups = c("OpenTopoMap", "Esri.WorldImagery"))
+    baseGroups = c("OpenTopoMap", "Esri.WorldImagery")
+  )
 
 my.map
 
