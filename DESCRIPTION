@@ -36,7 +36,7 @@ Suggests:
     pkgdown,
     purrr,
     renv,
-    roxygen2,
+    roxygen2 (>= 7.3.3),
     stringr,
     styler,
     testthat (>= 3.0.0),
