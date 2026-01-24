@@ -6,7 +6,7 @@
 #' @param geometry An sfc geometry column containing
 #'   the spatial locations of observations.
 #'
-#' @return A symmetric numeric matrix where element [i,j] represents the maximum
+#' @return A symmetric numeric matrix where element `[i,j]` represents the maximum
 #'   spatial distance in meters between observation i and observation j,
 #'   calculated on the sphere using Earth's radius.
 #'
@@ -33,13 +33,13 @@
 #'   crs = 3006
 #' )
 #' dist_matrix <- create_distance_matrix(points)
-#' 
+#'
 #' # Output (3x3 symmetric matrix, distances in meters):
 #' #         [,1]     [,2]     [,3]
 #' # [1,]       0   152891   304346
 #' # [2,]  152891        0   152024
 #' # [3,]  304346   152024        0
-#' # 
+#' #
 #' # Where:
 #' # - [1,1] = 0 (same point)
 #' # - [1,2] = 152891 (distance between point 1 and 2 in meters)

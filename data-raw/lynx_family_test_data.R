@@ -45,15 +45,15 @@ lynx_family_test_data <- st_sf(
   ),
   geometry = st_sfc(
     # Group 1 - Bymarka, Trondheim
-    st_point(c(10.30, 63.40)),  
-    st_point(c(10.28, 63.42)),  
-    st_point(c(10.32, 63.38)),  
+    st_point(c(10.30, 63.40)),
+    st_point(c(10.28, 63.42)),
+    st_point(c(10.32, 63.38)),
     # Group 2 - Nordmarka, Oslo
-    st_point(c(10.70, 60.05)),  
-    st_point(c(10.75, 60.07)),  
-    st_point(c(10.68, 60.03)),  
-    st_point(c(10.72, 60.09)),  
-    crs = 4326  
+    st_point(c(10.70, 60.05)),
+    st_point(c(10.75, 60.07)),
+    st_point(c(10.68, 60.03)),
+    st_point(c(10.72, 60.09)),
+    crs = 4326
   )
 )
 

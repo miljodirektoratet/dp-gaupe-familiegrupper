@@ -51,9 +51,9 @@ if (requireNamespace("delta.sharing", quietly = TRUE)) {
 ## Load Additional Libraries
 
 ```{r load-libraries}
-library(dplyr)     # For data manipulation
-library(ggplot2)   # For plotting
-library(jsonlite)  # For config file reading
+library(dplyr) # For data manipulation
+library(ggplot2) # For plotting
+library(jsonlite) # For config file reading
 ```
 
 ## Load Configuration
@@ -103,26 +103,29 @@ print(ls("package:delta.sharing"))
 
 # Create client (syntax will depend on the package implementation)
 # Common patterns might be:
-tryCatch({
-  # Try different possible function names
-  if (exists("delta_sharing_client")) {
-    client <- delta_sharing_client(config_path)
-    cat("✅ Client created with delta_sharing_client()\n")
-  } else if (exists("DeltaSharingClient")) {
-    client <- DeltaSharingClient(config_path)
-    cat("✅ Client created with DeltaSharingClient()\n")
-  } else if (exists("sharing_client")) {
-    client <- sharing_client(config_path)
-    cat("✅ Client created with sharing_client()\n")
-  } else {
-    cat("❓ Please check package documentation for client creation\n")
-    cat("Available functions:\n")
-    print(ls("package:delta.sharing"))
+tryCatch(
+  {
+    # Try different possible function names
+    if (exists("delta_sharing_client")) {
+      client <- delta_sharing_client(config_path)
+      cat("✅ Client created with delta_sharing_client()\n")
+    } else if (exists("DeltaSharingClient")) {
+      client <- DeltaSharingClient(config_path)
+      cat("✅ Client created with DeltaSharingClient()\n")
+    } else if (exists("sharing_client")) {
+      client <- sharing_client(config_path)
+      cat("✅ Client created with sharing_client()\n")
+    } else {
+      cat("❓ Please check package documentation for client creation\n")
+      cat("Available functions:\n")
+      print(ls("package:delta.sharing"))
+    }
+  },
+  error = function(e) {
+    cat("❌ Error creating client:", e$message, "\n")
+    cat("Please check the package documentation\n")
   }
-}, error = function(e) {
-  cat("❌ Error creating client:", e$message, "\n")
-  cat("Please check the package documentation\n")
-})
+)
 ```
 
 ## List Available Shares
@@ -130,30 +133,33 @@ tryCatch({
 ```{r list-shares}
 # List shares using the native R package
 if (exists("client")) {
-  tryCatch({
-    # Try different possible function names
-    if (exists("list_shares")) {
-      shares <- list_shares(client)
-    } else if (exists("client$list_shares")) {
-      shares <- client$list_shares()
-    } else {
-      cat("❓ Please check documentation for list_shares function\n")
-      shares <- NULL
-    }
-    
-    if (!is.null(shares)) {
-      cat("Available shares:\n")
-      print(shares)
-      
-      # Store first share for later use
-      if (nrow(shares) > 0) {
-        share_name <- shares$name[1]
-        cat("Using share:", share_name, "\n")
+  tryCatch(
+    {
+      # Try different possible function names
+      if (exists("list_shares")) {
+        shares <- list_shares(client)
+      } else if (exists("client$list_shares")) {
+        shares <- client$list_shares()
+      } else {
+        cat("❓ Please check documentation for list_shares function\n")
+        shares <- NULL
       }
+
+      if (!is.null(shares)) {
+        cat("Available shares:\n")
+        print(shares)
+
+        # Store first share for later use
+        if (nrow(shares) > 0) {
+          share_name <- shares$name[1]
+          cat("Using share:", share_name, "\n")
+        }
+      }
+    },
+    error = function(e) {
+      cat("❌ Error listing shares:", e$message, "\n")
     }
-  }, error = function(e) {
-    cat("❌ Error listing shares:", e$message, "\n")
-  })
+  )
 } else {
   cat("❌ No client available - please check client creation above\n")
 }
@@ -164,28 +170,31 @@ if (exists("client")) {
 ```{r list-schemas}
 # List schemas in the first share
 if (exists("share_name")) {
-  tryCatch({
-    if (exists("list_schemas")) {
-      schemas <- list_schemas(client, share_name)
-    } else if (exists("client$list_schemas")) {
-      schemas <- client$list_schemas(share_name)
-    } else {
-      cat("❓ Please check documentation for list_schemas function\n")
-      schemas <- NULL
-    }
-    
-    if (!is.null(schemas)) {
-      cat("Available schemas:\n")
-      print(schemas)
-      
-      if (nrow(schemas) > 0) {
-        schema_name <- schemas$name[1]
-        cat("Using schema:", schema_name, "\n")
+  tryCatch(
+    {
+      if (exists("list_schemas")) {
+        schemas <- list_schemas(client, share_name)
+      } else if (exists("client$list_schemas")) {
+        schemas <- client$list_schemas(share_name)
+      } else {
+        cat("❓ Please check documentation for list_schemas function\n")
+        schemas <- NULL
       }
+
+      if (!is.null(schemas)) {
+        cat("Available schemas:\n")
+        print(schemas)
+
+        if (nrow(schemas) > 0) {
+          schema_name <- schemas$name[1]
+          cat("Using schema:", schema_name, "\n")
+        }
+      }
+    },
+    error = function(e) {
+      cat("❌ Error listing schemas:", e$message, "\n")
     }
-  }, error = function(e) {
-    cat("❌ Error listing schemas:", e$message, "\n")
-  })
+  )
 }
 ```
 
@@ -194,28 +203,31 @@ if (exists("share_name")) {
 ```{r list-tables}
 # List tables in the first schema
 if (exists("schema_name")) {
-  tryCatch({
-    if (exists("list_tables")) {
-      tables <- list_tables(client, share_name, schema_name)
-    } else if (exists("client$list_tables")) {
-      tables <- client$list_tables(share_name, schema_name)
-    } else {
-      cat("❓ Please check documentation for list_tables function\n")
-      tables <- NULL
-    }
-    
-    if (!is.null(tables)) {
-      cat("Available tables:\n")
-      print(tables)
-      
-      if (nrow(tables) > 0) {
-        table_name <- tables$name[1]
-        cat("Using table:", table_name, "\n")
+  tryCatch(
+    {
+      if (exists("list_tables")) {
+        tables <- list_tables(client, share_name, schema_name)
+      } else if (exists("client$list_tables")) {
+        tables <- client$list_tables(share_name, schema_name)
+      } else {
+        cat("❓ Please check documentation for list_tables function\n")
+        tables <- NULL
       }
+
+      if (!is.null(tables)) {
+        cat("Available tables:\n")
+        print(tables)
+
+        if (nrow(tables) > 0) {
+          table_name <- tables$name[1]
+          cat("Using table:", table_name, "\n")
+        }
+      }
+    },
+    error = function(e) {
+      cat("❌ Error listing tables:", e$message, "\n")
     }
-  }, error = function(e) {
-    cat("❌ Error listing tables:", e$message, "\n")
-  })
+  )
 }
 ```
 
@@ -224,37 +236,40 @@ if (exists("schema_name")) {
 ```{r load-data}
 # Load actual data from the Delta Share table
 if (exists("table_name")) {
-  tryCatch({
-    # Try different possible function names for data loading
-    if (exists("load_table")) {
-      df <- load_table(client, share_name, schema_name, table_name)
-    } else if (exists("read_table")) {
-      df <- read_table(client, share_name, schema_name, table_name)
-    } else if (exists("client$load_table")) {
-      df <- client$load_table(share_name, schema_name, table_name)
-    } else if (exists("delta_sharing_read")) {
-      df <- delta_sharing_read(client, share_name, schema_name, table_name)
-    } else {
-      cat("❓ Please check documentation for data loading function\n")
-      df <- NULL
+  tryCatch(
+    {
+      # Try different possible function names for data loading
+      if (exists("load_table")) {
+        df <- load_table(client, share_name, schema_name, table_name)
+      } else if (exists("read_table")) {
+        df <- read_table(client, share_name, schema_name, table_name)
+      } else if (exists("client$load_table")) {
+        df <- client$load_table(share_name, schema_name, table_name)
+      } else if (exists("delta_sharing_read")) {
+        df <- delta_sharing_read(client, share_name, schema_name, table_name)
+      } else {
+        cat("❓ Please check documentation for data loading function\n")
+        df <- NULL
+      }
+
+      if (!is.null(df)) {
+        cat("✅ Data loaded successfully!\n")
+        cat("Data dimensions:", nrow(df), "rows x", ncol(df), "columns\n")
+        cat("Column names:", paste(names(df), collapse = ", "), "\n")
+
+        # Show data structure
+        cat("\nData structure:\n")
+        str(df)
+
+        # Show first few rows
+        cat("\nFirst 6 rows:\n")
+        print(head(df))
+      }
+    },
+    error = function(e) {
+      cat("❌ Error loading data:", e$message, "\n")
     }
-    
-    if (!is.null(df)) {
-      cat("✅ Data loaded successfully!\n")
-      cat("Data dimensions:", nrow(df), "rows x", ncol(df), "columns\n")
-      cat("Column names:", paste(names(df), collapse = ", "), "\n")
-      
-      # Show data structure
-      cat("\nData structure:\n")
-      str(df)
-      
-      # Show first few rows
-      cat("\nFirst 6 rows:\n")
-      print(head(df))
-    }
-  }, error = function(e) {
-    cat("❌ Error loading data:", e$message, "\n")
-  })
+  )
 }
 ```
 
@@ -264,33 +279,33 @@ if (exists("table_name")) {
 # Perform basic data analysis if data was loaded successfully
 if (exists("df") && !is.null(df) && nrow(df) > 0) {
   cat("=== DATA ANALYSIS ===\n")
-  
+
   # Basic summary
   cat("Dataset Summary:\n")
   print(summary(df))
-  
+
   # Check for missing values
   missing_counts <- sapply(df, function(x) sum(is.na(x)))
   if (any(missing_counts > 0)) {
     cat("\nMissing values per column:\n")
     print(missing_counts[missing_counts > 0])
   }
-  
+
   # Create visualizations for numeric columns
   numeric_cols <- sapply(df, is.numeric)
-  
+
   if (any(numeric_cols)) {
     numeric_col <- names(df)[which(numeric_cols)[1]]
     cat("\nCreating histogram for:", numeric_col, "\n")
-    
+
     p1 <- ggplot(df, aes_string(x = numeric_col)) +
       geom_histogram(bins = 30, fill = "steelblue", alpha = 0.7) +
       labs(title = paste("Distribution of", numeric_col)) +
       theme_minimal()
-    
+
     print(p1)
   }
-  
+
   # Show categorical data summary
   char_cols <- sapply(df, function(x) is.character(x) || is.factor(x))
   if (any(char_cols)) {
@@ -298,7 +313,6 @@ if (exists("df") && !is.null(df) && nrow(df) > 0) {
     cat("\nTop values in", char_col, ":\n")
     print(head(sort(table(df[[char_col]]), decreasing = TRUE)))
   }
-  
 } else {
   cat("No data available for analysis\n")
 }
@@ -318,14 +332,14 @@ if (requireNamespace("delta.sharing", quietly = TRUE)) {
   cat("Title:", desc$Title, "\n")
   cat("Description:", desc$Description, "\n")
   cat("Author:", desc$Author, "\n")
-  
+
   # List all exported functions
   cat("\nExported functions:\n")
   exported <- getNamespaceExports("delta.sharing")
   for (func in exported) {
     cat("-", func, "\n")
   }
-  
+
   cat("\nFor detailed help, use:\n")
   cat("help(package = 'delta.sharing')\n")
   cat("?function_name  # for specific function help\n")
@@ -338,31 +352,31 @@ if (requireNamespace("delta.sharing", quietly = TRUE)) {
 # If the package functions aren't obvious, explore them manually
 if (requireNamespace("delta.sharing", quietly = TRUE)) {
   cat("=== FUNCTION DISCOVERY ===\n")
-  
+
   # Get all objects in the package namespace
   all_objects <- ls("package:delta.sharing")
-  
+
   cat("All objects in package:\n")
   for (obj in all_objects) {
     obj_class <- class(get(obj, envir = asNamespace("delta.sharing")))
     cat("-", obj, "(", paste(obj_class, collapse = ", "), ")\n")
   }
-  
+
   # Look for common patterns
   client_functions <- all_objects[grepl("client|Client", all_objects)]
   list_functions <- all_objects[grepl("list|List", all_objects)]
   load_functions <- all_objects[grepl("load|read|Load|Read", all_objects)]
-  
+
   if (length(client_functions) > 0) {
     cat("\nPossible client functions:\n")
     print(client_functions)
   }
-  
+
   if (length(list_functions) > 0) {
     cat("\nPossible listing functions:\n")
     print(list_functions)
   }
-  
+
   if (length(load_functions) > 0) {
     cat("\nPossible data loading functions:\n")
     print(load_functions)
@@ -409,22 +423,21 @@ if (requireNamespace("delta.sharing", quietly = TRUE)) {
   cat("✅ Native R delta.sharing package is available\n")
   cat("✅ Provides pure R implementation (no Python required)\n")
   cat("✅ Should integrate well with renv\n")
-  
+
   if (exists("df") && !is.null(df)) {
     cat("✅ Successfully loaded data:", nrow(df), "rows\n")
   }
-  
+
   cat("\n🔧 Advantages:\n")
   cat("- Pure R implementation\n")
-  cat("- No Python dependencies\n") 
+  cat("- No Python dependencies\n")
   cat("- Better renv integration\n")
   cat("- Native R data types\n")
-  
+
   cat("\n⚠️ Considerations:\n")
   cat("- GitHub package (not CRAN)\n")
   cat("- May have installation challenges in some environments\n")
   cat("- Smaller community than Python implementation\n")
-  
 } else {
   cat("❌ Native R delta.sharing package not installed\n")
   cat("📋 Alternative options:\n")

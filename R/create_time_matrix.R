@@ -8,7 +8,7 @@
 #' @param activity_to Vector of POSIXct or Date objects representing the end
 #'   of activity periods. Must be the same length as activity_from.
 #'
-#' @return A symmetric numeric matrix (n x n) where element [i,j] represents the
+#' @return A symmetric numeric matrix (n x n) where element `[i,j]` represents the
 #'   maximum temporal distance in days between observation i and j. Diagonal
 #'   elements are 1 (same observation). All values are integers (ceiled).
 #'
@@ -29,8 +29,6 @@
 #' The maximum (11 days) is used to conservatively measure temporal separation.
 #' A small constant (0.001) is added before ceiling to ensure diagonal is 1.
 #'
-#' @importFrom stats difftime
-#'
 #' @export
 #'
 #' @examples
@@ -39,13 +37,13 @@
 #' activity_from <- as.POSIXct(c("2024-01-01", "2024-01-05", "2024-01-10"))
 #' activity_to <- as.POSIXct(c("2024-01-03", "2024-01-07", "2024-01-12"))
 #' time_matrix <- create_time_matrix(activity_from, activity_to)
-#' 
+#'
 #' # Output (3x3 symmetric matrix):
 #' #      [,1] [,2] [,3]
 #' # [1,]    1    7   12
 #' # [2,]    7    1    8
 #' # [3,]   12    8    1
-#' # 
+#' #
 #' # Where:
 #' # - [1,1] = 1 (same observation)
 #' # - [1,2] = 7 (max distance between obs 1 and 2)
