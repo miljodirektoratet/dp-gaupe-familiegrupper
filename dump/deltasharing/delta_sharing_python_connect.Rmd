@@ -1,0 +1,272 @@
+---
+title: "Delta Sharing Python Integration"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+## Introduction
+
+This notebook demonstrates how to connect to and use data from a Delta Share using the Python `delta-sharing` library through R's `reticulate` package.
+
+**Prerequisites:**
+- A Delta Sharing configuration file (`config.share`) received from the data provider
+- Python 3.7+ with `delta-sharing` and `pandas` packages installed
+- R with `reticulate`, `dplyr`, `ggplot2` and `jsonlite` packages installed
+
+## Load Required Libraries
+
+```{r load-libraries, echo=FALSE}
+library(reticulate)  # For Python integration
+library(dplyr)       # For data manipulation
+library(ggplot2)     # For plotting
+library(jsonlite)    # For config file reading
+```
+
+## Setup Python Environment
+
+```{r setup-python, echo=FALSE}
+# Configure Python environment
+# You can specify a specific Python installation if needed
+# reticulate::use_python("/usr/bin/python3", required = TRUE)
+
+# Check current Python configuration
+py_config <- reticulate::py_config()
+
+# Handle version display (py_config$version can be a list)
+if (is.list(py_config$version)) {
+  version_str <- paste(py_config$version, collapse = ".")
+} else {
+  version_str <- as.character(py_config$version)
+}
+
+cat("Python version:", version_str, "\n")
+cat("Python executable:", py_config$python, "\n")
+```
+
+## Install Python Dependencies for Delta Sharing
+
+```{r install-python-deps, echo=FALSE}
+cat("Installing delta-sharing Python package...\n")
+reticulate::py_install("delta-sharing")
+reticulate::py_install("pandas") # delta-sharing dependency
+```
+
+## Load Configuration
+
+```{r load-config, echo=FALSE}
+cat("Current working directory:", getwd(), "\n")
+
+config_path <- "config.share"
+
+# Check if file exists and read it
+if (!file.exists(config_path)) {
+  # Try absolute path if relative doesn't work
+  config_path <- "/path/to/config.share"
+  cat("Trying absolute path:", config_path, "\n")
+}
+
+cat("Using config file:", config_path, "\n")
+
+# Read configuration for reference
+config <- jsonlite::fromJSON(config_path)
+cat("Endpoint:", config$endpoint, "\n")
+cat("Token expires:", config$expirationTime, "\n")
+
+# Check if token is expiring soon
+expiry_date <- as.POSIXct(config$expirationTime, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC")
+current_date <- Sys.time()
+time_until_expiry <- difftime(expiry_date, current_date, units = "hours")
+
+cat("Time until token expires:", round(as.numeric(time_until_expiry), 2), "hours\n")
+
+if (time_until_expiry < 5) {
+  cat("WARNING: Token expires within 5 hours!\n")
+}
+```
+
+## Create Delta Sharing Client
+
+```{r create-client, echo=FALSE}
+# Import the delta-sharing Python module into R
+delta_sharing <- reticulate::import("delta_sharing")
+client <- delta_sharing$SharingClient(config_path)
+
+cat("Delta Sharing client created successfully\n")
+```
+
+## List Available Shares
+
+```{r list-shares, echo=FALSE}
+# List all available shares
+shares_py <- client$list_shares()
+shares_r <- reticulate::py_to_r(shares_py)
+
+cat("Available shares:\n")
+share_names <- c()
+
+for (i in seq_along(shares_r)) {
+  share_name <- shares_r[[i]]$name
+  share_names <- c(share_names, share_name)
+  cat(paste0(i, ". ", share_name, "\n"))
+}
+
+# Store first share for later use
+share_name <- share_names[1]
+cat("\nUsing share:", share_name, "\n")
+```
+
+## List Schemas in a Share
+
+```{r explore-share, echo=FALSE}
+# Get shares, schemas, and tables
+shares_py <- client$list_shares()
+shares_r <- reticulate::py_to_r(shares_py)
+
+# Use first share
+share_name <- shares_r[[1]]$name
+cat("Share:", share_name, "\n")
+
+# Get schemas from first share
+schemas_py <- client$list_schemas(shares_py[[1]])
+schemas_r <- reticulate::py_to_r(schemas_py)
+schema_name <- schemas_r[[1]]$name
+cat("Schema:", schema_name, "\n")
+
+# Get tables from first schema
+tables_py <- client$list_tables(schemas_py[[1]])
+tables_r <- reticulate::py_to_r(tables_py)
+table_name <- tables_r[[1]]$name
+cat("Table:", table_name, "\n")
+```
+
+## Load First Table Data (Simple)
+
+```{r load-first-table, echo=FALSE}
+# Simple approach: Load data from the first table
+if (exists("table_name")) {
+  cat("Loading data from:", table_name, "\n")
+  
+  # Create table URL using config file format
+  table_url <- paste0(config_path, "#", share_name, ".", schema_name, ".", table_name)
+  cat("Table URL:", table_url, "\n")
+  
+  # Load the data
+  df_pandas <- delta_sharing$load_as_pandas(table_url)
+  df_r <- reticulate::py_to_r(df_pandas)
+  
+  # Show basic info
+  cat("Data loaded successfully!\n")
+  cat("Rows:", nrow(df_r), "\n")
+  cat("Columns:", ncol(df_r), "\n")
+  cat("Column names:", paste(names(df_r), collapse = ", "), "\n")
+  
+  # Show first few rows
+  print(head(df_r))
+}
+```
+
+## Save spatial tables as GeoParquet and non-spatial as Parquet
+
+```{r save-geoparquet, echo=FALSE}
+# Save the loaded data as GeoParquet in delta-sharing-download folder
+if (exists("df_r")) {
+  # Create the directory if it doesn't exist
+  output_dir <- "delta-sharing-download"
+  if (!dir.exists(output_dir)) {
+    dir.create(output_dir, recursive = TRUE)
+    cat("Created directory:", output_dir, "\n")
+  }
+  
+  # Check for potential geometry columns
+  potential_geom_cols <- names(df_r)[grepl("geom|geometry|shape|wkt|wkb|point|polygon|line", 
+                                           names(df_r), ignore.case = TRUE)]
+  
+  if (length(potential_geom_cols) > 0) {
+    cat("Potential geometry columns found:", paste(potential_geom_cols, collapse = ", "), "\n")
+    
+    # Load required libraries for spatial data
+    library(sf)
+    library(arrow)
+    
+    # Try to create spatial data frame
+    tryCatch({
+      # Assume first potential geometry column contains WKT
+      geom_col <- potential_geom_cols[1]
+      cat("Using geometry column:", geom_col, "\n")
+      
+      # Create sf object from WKT
+      sf_data <- st_as_sf(df_r, wkt = geom_col)
+      
+      # Create filename with timestamp
+      timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
+      filename <- paste0(table_name, "_", timestamp, ".geoparquet")
+      filepath <- file.path(output_dir, filename)
+      
+      # Save as GeoParquet
+      write_parquet(sf_data, filepath)
+      
+      cat("Data saved as GeoParquet:\n")
+      cat("File:", filepath, "\n")
+      cat("Rows:", nrow(sf_data), "\n")
+      cat("Columns:", ncol(sf_data), "\n")
+      cat("Geometry column:", geom_col, "\n")
+      
+      # Show file size
+      file_size_mb <- file.size(filepath) / (1024^2)
+      cat("File size:", round(file_size_mb, 2), "MB\n")
+      
+      # Show CRS info
+      crs_info <- st_crs(sf_data)
+      if (!is.na(crs_info)) {
+        cat("CRS:", crs_info$input, "\n")
+      } else {
+        cat("CRS: Not defined\n")
+      }
+      
+    }, error = function(e) {
+      cat("Could not create spatial data frame:", e$message, "\n")
+      cat("Saving as regular Parquet instead...\n")
+      
+      # Fallback to regular Parquet
+      timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
+      filename <- paste0(table_name, "_", timestamp, "_regular.parquet")
+      filepath <- file.path(output_dir, filename)
+      
+      library(arrow)
+      write_parquet(df_r, filepath)
+      cat("Saved as regular Parquet:", filepath, "\n")
+    })
+    
+  } else {
+    cat("No geometry columns detected. Data appears to be non-spatial.\n")
+    cat("Saving as regular Parquet instead...\n")
+    
+    # Save as regular Parquet
+    timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
+    filename <- paste0(table_name, "_", timestamp, "_nonspatial.parquet")
+    filepath <- file.path(output_dir, filename)
+    
+    library(arrow)
+    write_parquet(df_r, filepath)
+    
+    cat("Data saved as Parquet:\n")
+    cat("File:", filepath, "\n")
+    cat("Rows:", nrow(df_r), "\n")
+    cat("Columns:", ncol(df_r), "\n")
+    
+    # Show file size
+    file_size_mb <- file.size(filepath) / (1024^2)
+    cat("File size:", round(file_size_mb, 2), "MB\n")
+  }
+}
+```
+
+
+
+
+
+
+
