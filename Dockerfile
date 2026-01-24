@@ -1,5 +1,5 @@
 # Base image: Ubuntu, R, build tools and system libraries
-FROM rocker/geospatial:4.5.1
+FROM rocker/geospatial:4.4.0
 
 LABEL maintainer="Willeke A'Campo <willeke.acampo@miljodir.no>"
 LABEL description="R package for Grouping lynx observations into family groups based on spatio-temporal criteria."
