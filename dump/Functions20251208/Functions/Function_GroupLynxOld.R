@@ -51,8 +51,11 @@ grouplynx<-function(RovbaseID, activity_from, activity_to, geometry, prey_class,
                              abs(outer(my.dat$activity_from, my.dat$activity_to, difftime, units="days"))+0.001,
                              abs(outer(my.dat$activity_to, my.dat$activity_from, difftime, units="days"))+0.001,
                              abs(outer(my.dat$activity_to, my.dat$activity_to, difftime, units="days"))+0.001),
-                    dim=c(nrow(my.dat), nrow(my.dat), 3))
-  time.matrix<-apply(time.array, c(1,2), function(x){max(x, na.rm = TRUE)}) 
+                    dim=c(nrow(my.dat), nrow(my.dat), 4))
+  time.matrix<-apply(time.array, c(1,2), function(x){
+    if(all(is.na(x))) return(NA)
+    max(x, na.rm = TRUE)
+  }) 
   time.matrix<-ceiling(time.matrix) # Think through if this approach fix the time isse
   
   if(any(is.na(time.matrix))) {stop('Time array contains NA, make sure that there are no NAs in the time columns')}

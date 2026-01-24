@@ -42,7 +42,7 @@ dat_spor<-st_as_sf(dat_spor)
 plot(datagrunnlag$geometry)
 
 # Check if all RovbaseID is in datagrunnlag
-all(c(unique(dat_pnt$rovbase_key_kilde), unique(dod$rovbase_key_kilde))%in%unique(datagrunnlag$rovbase_key_kilde))
+all(c(unique(dat_pnt$rovbase_id), unique(dod$rovbase_id))%in%unique(datagrunnlag$rovbase_id))
 
 # Give datagrunnlag a shorter name and make it spatial
 dat<-st_as_sf(datagrunnlag)
@@ -61,7 +61,7 @@ dat$datetime2<-as.POSIXct(paste0(dat$aktivitetsdato_til, " ", dat$aktivitetstid_
 dat<-st_as_sf(dat)
 
 dat<-dat %>%
-  group_by(rovbase_key_kilde) %>% 
+  group_by(rovbase_id) %>% 
   summarize(geometry = st_union(geometry),
             datetime1 = datetime1[1],
             datetime2 = datetime2[1])
@@ -79,15 +79,15 @@ for(ii in which(lengths(ind)>1)){
   dat[ii,]$prey<-prey[unlist(ind[which(lengths(ind)>1)]),]
 }
 
-fam_groups<-grouplynx_diff_starts(RovbaseID = dat$rovbase_key_kilde, 
+fam_groups<-grouplynx_diff_starts(RovbaseID = dat$rovbase_id, 
                                   activity_from = dat$datetime1, 
                                   activity_to = dat$datetime2, 
                                   geometry = dat$geometry, prey_class = dat$prey, crs=3006)
 
 
 # Clean data to make lines
-obs_pnt<-rbind(dat_pnt[,c("rovbase_key_kilde", "geometry")],
-               dod[,c("rovbase_key_kilde", "geometry")])
+obs_pnt<-rbind(dat_pnt[,c("rovbase_id", "geometry")],
+               dod[,c("rovbase_id", "geometry")])
 
 which.col=which.min(c(min(fam_groups$n.hclust), min(fam_groups$n.custom)))
 which.method=c("h_clust", "custom")[which.col]
@@ -95,7 +95,7 @@ which.order=fam_groups$sorting[which.min(fam_groups[,(which.col+1)])]
 reversed<-length(strsplit(which.order, "_")[[1]][1])==2
 which.order<-strsplit(which.order, "_")[[1]][1]
 
-my.grouped.obs<-grouplynx(RovbaseID = dat$rovbase_key_kilde, activity_from = dat$datetime1, activity_to =dat$datetime2, 
+my.grouped.obs<-grouplynx(RovbaseID = dat$rovbase_id, activity_from = dat$datetime1, activity_to =dat$datetime2, 
                        geometry = dat$geometry, prey_class = dat$prey, clust=which.method, 
                        which.order=which.order, reversed=reversed, pretty=F, crs=3006, save_geometry=T, 
                        path="Grouped/", obs_pnt = obs_pnt)

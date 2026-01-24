@@ -72,7 +72,7 @@ grouplynx<-function(RovbaseID, activity_from, activity_to, geometry, prey_class,
   # ----  Save the geometry?
   if(save_geometry){ # Saving output as shapefiles
     obs_pnt<-merge(obs_pnt, as.data.frame(my.dat[,c("RovbaseID", "groupID1")])[,1:2], 
-                   by.x="rovbase_key_kilde", by.y="RovbaseID")
+                   by.x="rovbase_id", by.y="RovbaseID")
     
     my.dat_cent<-create_centerpoints(st_centroid(obs_pnt)) # Replaced old geometry with observation point
     
