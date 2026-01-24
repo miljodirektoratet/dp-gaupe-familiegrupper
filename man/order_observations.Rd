@@ -42,12 +42,6 @@ Orders spatial observations using different methods including temporal,
 spatial (PCA), cardinal directions, or random ordering. This function is
 used to determine the starting point for clustering algorithms.
 }
-\details{
-The ordering method can significantly affect the results of clustering
-algorithms. Different starting points may lead to different groupings.
-The PCA-based orderings use principal component analysis on the spatial
-coordinates to find the main axes of variation.
-}
 \examples{
 \dontrun{
 # Order by time (default)

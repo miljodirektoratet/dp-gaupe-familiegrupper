@@ -7,17 +7,17 @@
 create_distance_matrix(geometry)
 }
 \arguments{
-\item{geometry}{An sfc geometry column (typically from an sf object) containing
-the spatial locations of observations. Must be valid s2 geometries.}
+\item{geometry}{An sfc geometry column containing
+the spatial locations of observations.}
 }
 \value{
-A symmetric numeric matrix where element \link{i,j} represents the maximum
+A symmetric numeric matrix where element \verb{[i,j]} represents the maximum
 spatial distance in meters between observation i and observation j,
 calculated on the sphere using Earth's radius.
 }
 \description{
-Calculates a symmetric matrix of maximum spatial distances (in meters)
-between all pairs of lynx observations using the s2 spherical geometry library.
+Calculates a matrix of maximum spatial distances (in meters)
+between all pairs of lynx observations.
 }
 \details{
 This function uses the s2 library to calculate spherical distances on Earth's
@@ -30,13 +30,24 @@ than the distance between centroids.
 \examples{
 \dontrun{
 library(sf)
-# Create sample point data
+# Create sample point data at three locations in Norway
 points <- st_sfc(
   st_point(c(10, 60)),
   st_point(c(11, 61)),
   st_point(c(12, 62)),
-  crs = 4326
+  crs = 3006
 )
 dist_matrix <- create_distance_matrix(points)
+
+# Output (3x3 symmetric matrix, distances in meters):
+#         [,1]     [,2]     [,3]
+# [1,]       0   152891   304346
+# [2,]  152891        0   152024
+# [3,]  304346   152024        0
+#
+# Where:
+# - [1,1] = 0 (same point)
+# - [1,2] = 152891 (distance between point 1 and 2 in meters)
+# - [1,3] = 304346 (distance between point 1 and 3 in meters)
 }
 }

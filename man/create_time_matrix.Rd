@@ -14,31 +14,47 @@ of activity periods.}
 of activity periods. Must be the same length as activity_from.}
 }
 \value{
-A symmetric numeric matrix where element \link{i,j} represents the minimum
-temporal distance in days between observation i and observation j. A small
-constant (0.001) is added to prevent zero distances. Values are ceiled to
-integers.
+A symmetric numeric matrix (n x n) where element \verb{[i,j]} represents the
+maximum temporal distance in days between observation i and j. Diagonal
+elements are 1 (same observation). All values are integers (ceiled).
 }
 \description{
-Calculates a symmetric matrix of temporal distances (in days) between all
-pairs of lynx observations based on their activity periods.
+Calculates the maximum temporal distance (in days) between all pairs of
+lynx observation periods.
 }
 \details{
-The function calculates temporal overlap by considering all four possible
-combinations of start and end times between pairs of observations:
+For each pair of observations, the function computes the temporal distance
+between all four combinations of start/end times and returns the maximum.
+This ensures the full temporal extent of both observation periods is considered.
+
+Example: If observation A spans Jan 1-3 and observation B spans Jan 10-12,
+the function calculates:
 \itemize{
-\item from\link{i} to from\link{j}
-\item from\link{i} to to\link{j}
-\item to\link{i} to from\link{j}
-\item to\link{i} to to\link{j}
+\item Start A to Start B: Jan 1 to Jan 10 = 9 days
+\item Start A to End B: Jan 1 to Jan 12 = 11 days (maximum)
+\item End A to Start B: Jan 3 to Jan 10 = 7 days
+\item End A to End B: Jan 3 to Jan 12 = 9 days
 }
-The maximum of these four distances is taken as the temporal distance,
-then ceiled to the nearest integer day.
+
+The maximum (11 days) is used to conservatively measure temporal separation.
+A small constant (0.001) is added before ceiling to ensure diagonal is 1.
 }
 \examples{
 \dontrun{
+# Three observations with activity periods
 activity_from <- as.POSIXct(c("2024-01-01", "2024-01-05", "2024-01-10"))
 activity_to <- as.POSIXct(c("2024-01-03", "2024-01-07", "2024-01-12"))
 time_matrix <- create_time_matrix(activity_from, activity_to)
+
+# Output (3x3 symmetric matrix):
+#      [,1] [,2] [,3]
+# [1,]    1    7   12
+# [2,]    7    1    8
+# [3,]   12    8    1
+#
+# Where:
+# - [1,1] = 1 (same observation)
+# - [1,2] = 7 (max distance between obs 1 and 2)
+# - [1,3] = 12 (max distance between obs 1 and 3)
 }
 }
