@@ -11,8 +11,12 @@
 TODO.md
 
 # folders
-data-raw/raw/*
-!data-raw/raw/.gitkeep
+data-raw/features/*
+data-raw/features/*/*
+# keep subfolders and .gitkeep files
+!data-raw/features/*/ 
+!data-raw/features/.gitkeep
+!data-raw/features/*/.gitkeep
 dump/hidden/*
 
 
