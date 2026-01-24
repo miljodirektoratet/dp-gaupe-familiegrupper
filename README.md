@@ -108,13 +108,13 @@ guide](./docs/setup-guide.md#development-container-technical-details).
 
 ### Workflow Statuses
 
-| Job | Status | Description |
-|----|----|----|
-| **R-CMD-check** | ![Status](https://img.shields.io/github/actions/workflow/status/miljodirektoratet/dp-gaupe-familiegrupper/R-CMD-check.yaml?branch=main&label=&style=flat) | R package validation, testing, cross-platform checks |
-| **Lint** | ![Status](https://img.shields.io/github/actions/workflow/status/miljodirektoratet/dp-gaupe-familiegrupper/lint.yaml?branch=main&label=&style=flat) | Code style and quality checks using lintr |
-| **CI Docker** | ![Status](https://img.shields.io/github/actions/workflow/status/miljodirektoratet/dp-gaupe-familiegrupper/ci-docker-prod.yaml?branch=main&label=&style=flat) | Build and test Docker image |
-| **CD Docker** | ![Status](https://img.shields.io/github/actions/workflow/status/miljodirektoratet/dp-gaupe-familiegrupper/cd-docker-prod.yaml?label=&style=flat) | Container deployment to GitHub Registry |
-| **Dependabot** |  | Automated dependency updates and vulnerability scanning |
+| Job             | Status                                                                                                                                                       | Description                                             |
+|-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------|
+| **R-CMD-check** | ![Status](https://img.shields.io/github/actions/workflow/status/miljodirektoratet/dp-gaupe-familiegrupper/R-CMD-check.yaml?branch=main&label=&style=flat)    | R package validation, testing, cross-platform checks    |
+| **Lint**        | ![Status](https://img.shields.io/github/actions/workflow/status/miljodirektoratet/dp-gaupe-familiegrupper/lint.yaml?branch=main&label=&style=flat)           | Code style and quality checks using lintr               |
+| **CI Docker**   | ![Status](https://img.shields.io/github/actions/workflow/status/miljodirektoratet/dp-gaupe-familiegrupper/ci-docker-prod.yaml?branch=main&label=&style=flat) | Build and test Docker image                             |
+| **CD Docker**   | ![Status](https://img.shields.io/github/actions/workflow/status/miljodirektoratet/dp-gaupe-familiegrupper/cd-docker-prod.yaml?label=&style=flat)             | Container deployment to GitHub Registry                 |
+| **Dependabot**  |                                                                                                                                                              | Automated dependency updates and vulnerability scanning |
 
 ## Getting Started
 
@@ -332,15 +332,15 @@ rules are enforced in this repo.
 The repository includes automated workflows for code quality, security,
 and deployment:
 
-| Workflow | Trigger | Purpose |
-|----|----|----|
-| **R-CMD-check** | `push`, `pull_request` to `main` | R package validation, testing, cross-platform checks |
-| **lint** | `push`, `pull_request` to `main` | Code style and quality checks using lintr |
-| **CI Docker** | `push` to `main` | Docker build and Test |
-| **CD Docker** | `push` to `main` with version tags | Container deployment to GitHub Registry |
-| **CodeQL Analysis** | `push`, `pull_request`, `schedule` | Code security analysis |
-| **Dependabot** | `schedule` | Automated dependency updates and vulnerability scanning |
-| **Zizmor Security** | `push`, `pull_request` | GitHub Actions workflow security auditing |
+| Workflow            | Trigger                            | Purpose                                                 |
+|---------------------|------------------------------------|---------------------------------------------------------|
+| **R-CMD-check**     | `push`, `pull_request` to `main`   | R package validation, testing, cross-platform checks    |
+| **lint**            | `push`, `pull_request` to `main`   | Code style and quality checks using lintr               |
+| **CI Docker**       | `push` to `main`                   | Docker build and Test                                   |
+| **CD Docker**       | `push` to `main` with version tags | Container deployment to GitHub Registry                 |
+| **CodeQL Analysis** | `push`, `pull_request`, `schedule` | Code security analysis                                  |
+| **Dependabot**      | `schedule`                         | Automated dependency updates and vulnerability scanning |
+| **Zizmor Security** | `push`, `pull_request`             | GitHub Actions workflow security auditing               |
 
 The R package workflows ensure code quality and compatibility across
 different R versions and operating systems. The **R-CMD-check** workflow
