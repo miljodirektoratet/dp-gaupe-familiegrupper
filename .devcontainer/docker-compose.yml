@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 services:
   # VS Code development environment
   vscode:
@@ -12,7 +12,8 @@ services:
     volumes:
       - ./docker.Rprofile:/home/rstudio/workspace/.Rprofile
       - ../:/home/rstudio/workspace:cached
-      - renv-cache:/home/rstudio/cache
+      - ~/.cache/R/renv:/home/rstudio/cache # use host renv cache
+      #  - renv-cache:/home/rstudio/cache (cache as named volume)
     environment:
       - R_PROFILE_USER=/home/rstudio/workspace/.Rprofile
       - RENV_PATHS_CACHE=/home/rstudio/cache
@@ -29,7 +30,8 @@ services:
     volumes:
       - ./docker.Rprofile:/home/rstudio/workspace/.Rprofile:ro
       - ../:/home/rstudio/workspace
-      - renv-cache:/home/rstudio/cache
+      - ~/.cache/R/renv:/home/rstudio/cache # use host renv cache
+      #  - renv-cache:/home/rstudio/cache (cache as named volume)
     environment:
       - DISABLE_AUTH=true
       - R_PROFILE_USER=/home/rstudio/workspace/.Rprofile
@@ -37,5 +39,5 @@ services:
     ports:
       - "8787:8787"
     command: /init
-volumes:
-  renv-cache:
+# volumes:
+# renv-cache:
