@@ -9,7 +9,7 @@ create_centerpoints(data, group_col = "gruppe_id")
 \arguments{
 \item{data}{An sf object with a geometry column and a grouping column.}
 
-\item{group_col}{The name of the grouping column (as a string or unquoted symbol). Default is "groupID1".}
+\item{group_col}{The name of the grouping column (as a string or unquoted symbol). Default is "gruppe_id".}
 }
 \value{
 An sf object with one centroid point per group, using the same CRS as the input.
