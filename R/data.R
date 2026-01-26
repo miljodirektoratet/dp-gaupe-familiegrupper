@@ -1,3 +1,16 @@
+#' Distance Rules Lookup Table
+#'
+#' A data frame of spatial distance thresholds for all combinations of prey classes and days, used for grouping and clustering.
+#'
+#' @format A data frame with columns:
+#' \describe{
+#'   \item{prey1}{Prey class 1 (character)}
+#'   \item{prey2}{Prey class 2 (character)}
+#'   \item{days}{Number of days (integer)}
+#'   \item{dist1}{Distance threshold in meters (numeric)}
+#' }
+#' @source Generated from legacy rules in data-raw/lut_distance_rules.R
+"lut_distance_rules"
 # Dataset documentation
 
 #' Dataset | Norway County Map Data (2024 borders)
