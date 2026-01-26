@@ -9,6 +9,7 @@
 # VERSION CONTROL
 ^.*\.Dockerfile$
 ^.*\.Rproj$
+^Dockerfile$
 ^LICENSE\.md$
 ^README\.Rmd$
 ^README\.md$
@@ -20,6 +21,7 @@
 ^\.Rprofile$
 ^\.Rproj\.user$
 ^\.Ruserdata$
+^\.devcontainer
 ^\.devcontainers$
 ^\.dockerignore$
 ^\.git$
@@ -29,15 +31,13 @@
 ^\.lintr$
 ^\.pre-commit-config\.yaml$
 ^\.vscode$
-^\.devcontainer
 ^command-cheatsheet\.md$
 ^compose\.yaml$
 ^compose\.yml$
 ^container-setup\.md$
 ^data-raw$
-^data/delta-share-download$
 ^data/.*\.gitkeep$
-^Dockerfile$
+^data/delta-share-download$
 ^docs$
 ^dump$
 ^logs$

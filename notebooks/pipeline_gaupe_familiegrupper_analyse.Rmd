@@ -11,7 +11,7 @@ output:
 
 # Lynx Family Groups Analysis Pipeline
 
-This notebook walks through the spatial analysis and grouping of lynx family 
+This notebook walks through the spatial analysis and grouping of lynx family
 observations, using custom clustering and interactive mapping. The main steps include:
 
 1. Loading and preparing spatial data
@@ -22,14 +22,14 @@ observations, using custom clustering and interactive mapping. The main steps in
 Tips for installing required packages:
 - If packages are not installed, add them to imports and install using:
   ```R
-  usethis::use_package("package_name") 
+  usethis::use_package("package_name")
   usethis::use_package("package_name")
   ```
 - To avoid expression limit errors, you can increase the limit using:
   ```R
   options(expressions = 50000)
   ```
-- Arrow package can be difficult to install from CRAN, R-Universe provides pre-compiled 
+- Arrow package can be difficult to install from CRAN, R-Universe provides pre-compiled
 binaries. Refer to refer https://arrow.apache.org/docs/r/ for detailed installation instructions.
   ```R
   install.packages("arrow", repos = c("https://apache.r-universe.dev", "https://cloud.r-project.org"))

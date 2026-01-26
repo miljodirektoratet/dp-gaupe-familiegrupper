@@ -16,6 +16,14 @@ renv::snapshot(dev = TRUE)
 devtools::load_all()
 gaupefam::hello()
 
+# Check package functions have documentation
+?gaupefam::create_distance_matrix
+?gaupefam::create_time_matrix
+?gaupefam::data
+?gaupefam::hello
+?gaupefam::order_observations
+?gaupefam::plot_norway
+
 # CHECK: code quality
 lintr::lint_dir() # Check only
 styler::style_dir(project_dir, exclude_dirs = c("renv", "dump", "packrat", ".git")) # Fix

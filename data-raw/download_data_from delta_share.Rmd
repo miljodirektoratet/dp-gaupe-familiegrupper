@@ -455,7 +455,7 @@ cat("- Delta Sharing Spec: https://github.com/delta-io/delta-sharing\n")
 
 ### About this Package:
 - **Source**: Community-maintained R implementation by zacdav-db
-- **Status**: Experimental/development package  
+- **Status**: Experimental/development package
 - **Dependencies**: arrow, bit, bit64, and other data processing packages
 
 ### Installation with renv:

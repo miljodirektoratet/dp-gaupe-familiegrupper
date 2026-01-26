@@ -75,9 +75,9 @@ cat("API base URL:", api_base, "\n")
 delta_sharing_api_call <- function(url_path, method = "GET") {
   # The endpoint already includes the metastore path, so we build from there
   full_url <- paste0(api_base, url_path)
-  
+
   cat("Making API call to:", full_url, "\n")
-  
+
   response <- httr::GET(
     url = full_url,
     httr::add_headers(
@@ -85,7 +85,7 @@ delta_sharing_api_call <- function(url_path, method = "GET") {
       "Content-Type" = "application/json"
     )
   )
-  
+
   if (httr::status_code(response) == 200) {
     content <- httr::content(response, "text", encoding = "UTF-8")
     return(jsonlite::fromJSON(content))
@@ -106,14 +106,14 @@ shares_result <- delta_sharing_api_call("/shares")
 if (!is.null(shares_result)) {
   cat("Shares result structure:\n")
   str(shares_result)
-  
+
   # Handle different possible response structures
   if ("items" %in% names(shares_result)) {
     shares <- shares_result$items
   } else {
     shares <- shares_result
   }
-  
+
   cat("Available shares:\n")
   if (nrow(shares) > 0) {
     # Shares is a data frame
@@ -135,16 +135,16 @@ if (!is.null(shares_result)) {
 if (exists("shares") && nrow(shares) > 0) {
   share_name <- shares$name[1]
   cat("Listing schemas in share:", share_name, "\n")
-  
+
   schemas_result <- delta_sharing_api_call(paste0("/shares/", share_name, "/schemas"))
-  
+
   if (!is.null(schemas_result)) {
     if ("items" %in% names(schemas_result)) {
       schemas <- schemas_result$items
     } else {
       schemas <- schemas_result
     }
-    
+
     cat("Available schemas:\n")
     if (nrow(schemas) > 0) {
       for (i in 1:nrow(schemas)) {
@@ -166,16 +166,16 @@ if (exists("shares") && nrow(shares) > 0) {
 if (exists("schemas") && nrow(schemas) > 0) {
   schema_name <- schemas$name[1]
   cat("Listing tables in schema:", schema_name, "\n")
-  
+
   tables_result <- delta_sharing_api_call(paste0("/shares/", share_name, "/schemas/", schema_name, "/tables"))
-  
+
   if (!is.null(tables_result)) {
     if ("items" %in% names(tables_result)) {
       tables <- tables_result$items
     } else {
       tables <- tables_result
     }
-    
+
     cat("Available tables:\n")
     if (nrow(tables) > 0) {
       for (i in 1:nrow(tables)) {
@@ -197,14 +197,14 @@ if (exists("schemas") && nrow(schemas) > 0) {
 if (exists("tables") && nrow(tables) > 0) {
   table_name <- tables$name[1]
   cat("Getting metadata for table:", table_name, "\n")
-  
+
   # For Delta Sharing, table metadata is often retrieved via the query endpoint
   # with a metadata-only request. Let's try a different approach.
-  
+
   # First, let's try to get basic table info from the tables list
   cat("Table information from tables list:\n")
   cat("Name:", table_name, "\n")
-  
+
   # Display table details if available in the tables result
   if ("shareId" %in% names(tables)) {
     cat("Share ID:", tables$shareId[1], "\n")
@@ -212,10 +212,10 @@ if (exists("tables") && nrow(tables) > 0) {
   if ("schemaName" %in% names(tables)) {
     cat("Schema:", tables$schemaName[1], "\n")
   }
-  
+
   cat("Table found in share:", share_name, "\n")
   cat("Schema:", schema_name, "\n")
-  
+
 } else {
   cat("No tables available\n")
 }
@@ -229,7 +229,7 @@ if (exists("tables") && nrow(tables) > 0) {
 # Get table files/metadata with multiple fallback strategies for Deletion Vectors
 if (exists("table_name") && exists("share_name") && exists("schema_name")) {
   cat("Getting file information for table:", table_name, "\n")
-  
+
   # Strategy 1: Try with responseFormat "delta"
   cat("\n=== Strategy 1: Delta format ===\n")
   query_body_delta <- list(
@@ -238,9 +238,9 @@ if (exists("table_name") && exists("share_name") && exists("schema_name")) {
     version = 0L,
     responseFormat = "delta"
   )
-  
+
   full_url <- paste0(api_base, "/shares/", share_name, "/schemas/", schema_name, "/tables/", table_name, "/query")
-  
+
   response_delta <- httr::POST(
     url = full_url,
     httr::add_headers(
@@ -249,10 +249,10 @@ if (exists("table_name") && exists("share_name") && exists("schema_name")) {
     ),
     body = jsonlite::toJSON(query_body_delta, auto_unbox = TRUE)
   )
-  
+
   cat("Delta format response status:", httr::status_code(response_delta), "\n")
-  
-  # Strategy 2: Try with responseFormat "parquet" 
+
+  # Strategy 2: Try with responseFormat "parquet"
   if (httr::status_code(response_delta) != 200) {
     cat("\n=== Strategy 2: Parquet format ===\n")
     query_body_parquet <- list(
@@ -261,7 +261,7 @@ if (exists("table_name") && exists("share_name") && exists("schema_name")) {
       version = 0L,
       responseFormat = "parquet"
     )
-    
+
     response_parquet <- httr::POST(
       url = full_url,
       httr::add_headers(
@@ -270,9 +270,9 @@ if (exists("table_name") && exists("share_name") && exists("schema_name")) {
       ),
       body = jsonlite::toJSON(query_body_parquet, auto_unbox = TRUE)
     )
-    
+
     cat("Parquet format response status:", httr::status_code(response_parquet), "\n")
-    
+
     # Strategy 3: Try without responseFormat (default)
     if (httr::status_code(response_parquet) != 200) {
       cat("\n=== Strategy 3: Default format (no responseFormat) ===\n")
@@ -281,7 +281,7 @@ if (exists("table_name") && exists("share_name") && exists("schema_name")) {
         limitHint = 10000L,
         version = 0L
       )
-      
+
       response_default <- httr::POST(
         url = full_url,
         httr::add_headers(
@@ -290,16 +290,16 @@ if (exists("table_name") && exists("share_name") && exists("schema_name")) {
         ),
         body = jsonlite::toJSON(query_body_default, auto_unbox = TRUE)
       )
-      
+
       cat("Default format response status:", httr::status_code(response_default), "\n")
-      
+
       # Strategy 4: Try with older table version
       if (httr::status_code(response_default) != 200) {
         cat("\n=== Strategy 4: Try older table version ===\n")
-        
+
         # Try to get table history first
         history_url <- paste0(api_base, "/shares/", share_name, "/schemas/", schema_name, "/tables/", table_name, "/version")
-        
+
         history_response <- tryCatch({
           httr::GET(
             url = history_url,
@@ -309,19 +309,19 @@ if (exists("table_name") && exists("share_name") && exists("schema_name")) {
             )
           )
         }, error = function(e) NULL)
-        
+
         if (!is.null(history_response) && httr::status_code(history_response) == 200) {
           cat("Got table version info\n")
           # This endpoint might not exist, but worth trying
         }
-        
+
         # Try with an earlier version if possible
         query_body_v1 <- list(
           predicateHints = list(),
           limitHint = 1000L,  # Smaller limit
           version = 1L  # Try version 1
         )
-        
+
         response_v1 <- httr::POST(
           url = full_url,
           httr::add_headers(
@@ -330,9 +330,9 @@ if (exists("table_name") && exists("share_name") && exists("schema_name")) {
           ),
           body = jsonlite::toJSON(query_body_v1, auto_unbox = TRUE)
         )
-        
+
         cat("Version 1 response status:", httr::status_code(response_v1), "\n")
-        
+
         # Use the best response we got
         if (httr::status_code(response_v1) == 200) {
           response <- response_v1
@@ -353,24 +353,24 @@ if (exists("table_name") && exists("share_name") && exists("schema_name")) {
     response <- response_delta
     cat("✅ Using Delta format response\n")
   }
-  
+
   # Process the response
   cat("\n=== Processing Response ===\n")
   cat("Final response status:", httr::status_code(response), "\n")
-  
+
   if (httr::status_code(response) == 200) {
     files_content <- httr::content(response, "text", encoding = "UTF-8")
-    
+
     # Parse the response - it's JSONL (JSON Lines) format
     lines <- strsplit(files_content, "\n")[[1]]
     lines <- lines[lines != "" & !is.na(lines)]  # Remove empty lines
-    
+
     cat("Number of response lines:", length(lines), "\n")
-    
+
     # Parse metadata and file information
     metadata_lines <- list()
     file_lines <- list()
-    
+
     for (i in seq_along(lines)) {
       if (nzchar(lines[i])) {
         tryCatch({
@@ -385,10 +385,10 @@ if (exists("table_name") && exists("share_name") && exists("schema_name")) {
         })
       }
     }
-    
+
     cat("Found", length(metadata_lines), "metadata entries\n")
     cat("Found", length(file_lines), "file entries\n")
-    
+
     # Display schema information if available
     if (length(metadata_lines) > 0) {
       metadata <- metadata_lines[[1]]
@@ -407,17 +407,17 @@ if (exists("table_name") && exists("share_name") && exists("schema_name")) {
         }
       }
     }
-    
+
   } else {
     cat("❌ All query strategies failed\n")
     error_content <- httr::content(response, "text", encoding = "UTF-8")
-    
+
     tryCatch({
       error_json <- jsonlite::fromJSON(error_content)
       cat("\n=== Error Details ===\n")
       cat("Error code:", error_json$error_code, "\n")
       cat("Error message:", error_json$message, "\n")
-      
+
       # Provide specific guidance based on the error
       if (grepl("DeletionVectors", error_json$message)) {
         cat("\n=== 🛠️ SOLUTION REQUIRED ===\n")
@@ -434,7 +434,7 @@ if (exists("table_name") && exists("share_name") && exists("schema_name")) {
         cat("   REORG TABLE", table_name, "APPLY(PURGE)\n")
         cat("\n4. 🔄 Try a different table without Deletion Vectors\n")
       }
-      
+
     }, error = function(e) {
       cat("Could not parse error as JSON:", e$message, "\n")
       cat("Raw error:", error_content, "\n")
@@ -452,7 +452,7 @@ if (exists("table_name") && exists("share_name") && exists("schema_name")) {
 if (exists("table_name") && exists("share_name") && exists("schema_name") && exists("config_path")) {
   cat("=== 🐍 Python Alternative Code ===\n")
   cat("If the REST API fails, save this Python code to a .py file and run it:\n\n")
-  
+
   python_code <- sprintf('
 # Python script to download Delta Share data with Deletion Vectors support
 import delta_sharing
@@ -476,32 +476,32 @@ print(f"Loading table: {table_url}")
 try:
     # Load data using delta-sharing
     df = delta_sharing.load_as_pandas(config_path + "#" + table_url)
-    
+
     print(f"Successfully loaded {len(df)} rows and {len(df.columns)} columns")
     print(f"Columns: {list(df.columns)}")
-    
+
     # Save as Parquet
     output_file = os.path.join(output_dir, f"{table_name}.parquet")
     df.to_parquet(output_file)
     print(f"Saved to: {output_file}")
-    
+
     # If spatial data detected, also save as GeoParquet
     geom_columns = [col for col in df.columns if "geom" in col.lower() or "shape" in col.lower()]
     if geom_columns:
         print(f"Detected potential geometry columns: {geom_columns}")
         # You might need additional processing for spatial data
-    
+
 except Exception as e:
     print(f"Error: {e}")
     print("Make sure you have delta-sharing installed: pip install delta-sharing>=1.1")
 ', config_path, share_name, schema_name, table_name, download_dir)
-  
+
   cat(python_code)
   cat("\n=== Installation Instructions ===\n")
   cat("1. Install delta-sharing: pip install delta-sharing>=1.1\n")
   cat("2. Save the code above to a file (e.g., download_delta_share.py)\n")
   cat("3. Run: python download_delta_share.py\n")
-  
+
   # Also save the Python script to a file
   python_file <- file.path(download_dir, "download_delta_share.py")
   writeLines(python_code, python_file)
@@ -513,95 +513,95 @@ except Exception as e:
 # Download and process the Parquet files if we got file URLs
 if (exists("file_lines") && length(file_lines) > 0) {
   cat("Starting download of", length(file_lines), "files\n")
-  
+
   # Initialize list to store all data frames
   all_data <- list()
   download_count <- 0
-  
+
   # Process each file
   for (i in seq_along(file_lines)) {
     tryCatch({
       file_info <- file_lines[[i]]$file
       file_url <- file_info$url
-      
+
       cat("Processing file", i, "of", length(file_lines), "\n")
       cat("URL:", substr(file_url, 1, 100), "...\n")
-      
+
       # Create temporary file for download
       temp_file <- tempfile(fileext = ".parquet")
-      
+
       # Download file with authentication
       response <- httr::GET(
         url = file_url,
         httr::add_headers("Authorization" = paste("Bearer", bearer_token)),
         httr::write_disk(temp_file, overwrite = TRUE)
       )
-      
+
       if (httr::status_code(response) == 200) {
         # Read the Parquet file
         df <- arrow::read_parquet(temp_file)
         all_data[[i]] <- df
         download_count <- download_count + 1
-        
+
         cat("Successfully downloaded and read file", i, "- rows:", nrow(df), "cols:", ncol(df), "\n")
-        
+
         # Clean up temp file
         unlink(temp_file)
-        
+
       } else {
         cat("Failed to download file", i, "- status:", httr::status_code(response), "\n")
       }
-      
+
     }, error = function(e) {
       cat("Error processing file", i, ":", e$message, "\n")
     })
-    
+
     # Add small delay to be nice to the server
     Sys.sleep(0.1)
   }
-  
+
   cat("Successfully downloaded", download_count, "files\n")
-  
+
   # Combine all data frames if we have any
   if (length(all_data) > 0) {
     cat("Combining data from", length(all_data), "files\n")
-    
+
     # Remove any NULL entries
     all_data <- all_data[!sapply(all_data, is.null)]
-    
+
     if (length(all_data) > 0) {
       # Combine all data frames
       combined_data <- do.call(rbind, all_data)
-      
+
       cat("Combined dataset:\n")
       cat("- Rows:", nrow(combined_data), "\n")
       cat("- Columns:", ncol(combined_data), "\n")
       cat("- Column names:", paste(names(combined_data), collapse = ", "), "\n")
-      
+
       # Check if this is spatial data (has geometry column)
       has_geometry <- any(c("geometry", "geom", "shape", "wkb_geometry") %in% names(combined_data))
-      
+
       if (has_geometry) {
         cat("Detected spatial data - converting to sf object\n")
-        
+
         # Try to convert to sf object
         tryCatch({
           # Find geometry column
           geom_col <- intersect(c("geometry", "geom", "shape", "wkb_geometry"), names(combined_data))[1]
-          
+
           if (!is.na(geom_col)) {
             # Convert to sf if not already
             if (!inherits(combined_data, "sf")) {
               combined_data <- sf::st_as_sf(combined_data)
             }
-            
+
             # Save as GeoParquet
             output_file <- file.path(download_dir, paste0(table_name, ".geoparquet"))
             sf::write_sf(combined_data, output_file, driver = "Parquet")
-            
+
             cat("Saved spatial data to:", output_file, "\n")
             cat("File size:", round(file.size(output_file) / 1024 / 1024, 2), "MB\n")
-            
+
             # Display basic spatial info
             bbox <- sf::st_bbox(combined_data)
             cat("Bounding box:\n")
@@ -612,34 +612,34 @@ if (exists("file_lines") && length(file_lines) > 0) {
         }, error = function(e) {
           cat("Error processing spatial data:", e$message, "\n")
           cat("Saving as regular Parquet file instead\n")
-          
+
           # Save as regular Parquet
           output_file <- file.path(download_dir, paste0(table_name, ".parquet"))
           arrow::write_parquet(combined_data, output_file)
           cat("Saved to:", output_file, "\n")
         })
-        
+
       } else {
         cat("No spatial data detected - saving as regular Parquet\n")
-        
+
         # Save as regular Parquet
         output_file <- file.path(download_dir, paste0(table_name, ".parquet"))
         arrow::write_parquet(combined_data, output_file)
         cat("Saved to:", output_file, "\n")
         cat("File size:", round(file.size(output_file) / 1024 / 1024, 2), "MB\n")
       }
-      
+
       # Display sample data
       cat("\nFirst few rows:\n")
       print(head(combined_data, 3))
-      
+
     } else {
       cat("No data to combine\n")
     }
   } else {
     cat("No files were successfully downloaded\n")
   }
-  
+
 } else {
   cat("No file URLs available for download\n")
 }
@@ -657,14 +657,14 @@ if (file.exists(config_path)) {
   cat("Endpoint:", config$endpoint, "\n")
   cat("Credentials version:", config$shareCredentialsVersion, "\n")
   cat("Token expires:", config$expirationTime, "\n")
-  
+
   # Check if token is expiring soon
   expiry_date <- as.POSIXct(config$expirationTime, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC")
   current_date <- Sys.time()
   time_until_expiry <- difftime(expiry_date, current_date, units = "hours")
-  
+
   cat("Time until token expires:", round(as.numeric(time_until_expiry), 2), "hours\n")
-  
+
   if (time_until_expiry < 24) {
     cat("⚠️  WARNING: Token expires within 24 hours!\n")
   }

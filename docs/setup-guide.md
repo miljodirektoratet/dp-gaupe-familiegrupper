@@ -197,19 +197,19 @@ If you have [Docker](https://docs.docker.com/engine/install/) installed and pref
     ```r
     # Check working directory (should be /home/rstudio/project)
     getwd()
-    
+
     # Check renv status
     renv::status(dev = TRUE)
-    
+
     # Load and test the package
     devtools::load_all()
     gaupefam::hello()
     #> 🚀 Hello from gaupefam !
-    
+
     # Test plotting function
     map <- gaupefam::plot_trondelag()
     map
-    
+
     # Run package checks
     devtools::check()
     ```
@@ -225,7 +225,7 @@ If you have [Docker](https://docs.docker.com/engine/install/) installed and pref
     ```bash
     # Stop the current container
     docker compose --profile dev-rstudio down
-    
+
     # Start in watch mode (auto-reloads on file changes)
     docker compose --profile dev-rstudio watch
     ```
@@ -237,10 +237,10 @@ If you have [Docker](https://docs.docker.com/engine/install/) installed and pref
     ```bash
     # Stop and remove the running container
     docker compose --profile dev-rstudio down
-    
+
     # Remove the dev image (forces a full rebuild)
     docker rmi gaupefam-dev-rstudio
-    
+
     # Rebuild with build logs for troubleshooting
     mkdir -p logs
     docker compose --profile dev-rstudio build | tee logs/rstudio-build.log

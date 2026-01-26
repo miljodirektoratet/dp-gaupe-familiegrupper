@@ -66,9 +66,9 @@ cat("API base URL:", api_base, "\n")
 delta_sharing_api_call <- function(url_path, method = "GET") {
   # The endpoint already includes the metastore path, so we build from there
   full_url <- paste0(api_base, url_path)
-  
+
   cat("Making API call to:", full_url, "\n")
-  
+
   response <- httr::GET(
     url = full_url,
     httr::add_headers(
@@ -76,7 +76,7 @@ delta_sharing_api_call <- function(url_path, method = "GET") {
       "Content-Type" = "application/json"
     )
   )
-  
+
   if (httr::status_code(response) == 200) {
     content <- httr::content(response, "text", encoding = "UTF-8")
     return(jsonlite::fromJSON(content))
@@ -97,14 +97,14 @@ shares_result <- delta_sharing_api_call("/shares")
 if (!is.null(shares_result)) {
   cat("Shares result structure:\n")
   str(shares_result)
-  
+
   # Handle different possible response structures
   if ("items" %in% names(shares_result)) {
     shares <- shares_result$items
   } else {
     shares <- shares_result
   }
-  
+
   cat("Available shares:\n")
   if (nrow(shares) > 0) {
     # Shares is a data frame
@@ -126,16 +126,16 @@ if (!is.null(shares_result)) {
 if (exists("shares") && nrow(shares) > 0) {
   share_name <- shares$name[1]
   cat("Listing schemas in share:", share_name, "\n")
-  
+
   schemas_result <- delta_sharing_api_call(paste0("/shares/", share_name, "/schemas"))
-  
+
   if (!is.null(schemas_result)) {
     if ("items" %in% names(schemas_result)) {
       schemas <- schemas_result$items
     } else {
       schemas <- schemas_result
     }
-    
+
     cat("Available schemas:\n")
     if (nrow(schemas) > 0) {
       for (i in 1:nrow(schemas)) {
@@ -157,16 +157,16 @@ if (exists("shares") && nrow(shares) > 0) {
 if (exists("schemas") && nrow(schemas) > 0) {
   schema_name <- schemas$name[1]
   cat("Listing tables in schema:", schema_name, "\n")
-  
+
   tables_result <- delta_sharing_api_call(paste0("/shares/", share_name, "/schemas/", schema_name, "/tables"))
-  
+
   if (!is.null(tables_result)) {
     if ("items" %in% names(tables_result)) {
       tables <- tables_result$items
     } else {
       tables <- tables_result
     }
-    
+
     cat("Available tables:\n")
     if (nrow(tables) > 0) {
       for (i in 1:nrow(tables)) {
@@ -188,13 +188,13 @@ if (exists("schemas") && nrow(schemas) > 0) {
 if (exists("tables") && nrow(tables) > 0) {
   table_name <- tables$name[1]
   cat("Table name:", table_name, "\n")
-  
+
   # For now, we'll show how to get table metadata
   # Getting actual data requires the Python delta-sharing library
   table_info_result <- delta_sharing_api_call(
     paste0("/shares/", share_name, "/schemas/", schema_name, "/tables/", table_name)
   )
-  
+
   if (!is.null(table_info_result)) {
     cat("Table information:\n")
     cat("Name:", table_info_result$name, "\n")
@@ -217,17 +217,17 @@ if (exists("tables") && nrow(tables) > 0) {
 
 # # Configure Python environment
 # reticulate::use_python("/usr/bin/python3", required = TRUE)
-# 
+#
 # # Import delta-sharing
 # delta_sharing <- reticulate::import("delta_sharing")
-# 
+#
 # # Create sharing client
 # client <- delta_sharing$SharingClient(config_path)
-# 
+#
 # # List shares
 # shares_py <- client$list_shares()
 # print(shares_py)
-# 
+#
 # # If you have a specific table URL, load it:
 # # table_url <- "share.schema.table"
 # # df_pandas <- delta_sharing$load_as_pandas(table_url, client)
@@ -246,7 +246,7 @@ if (exists("table_name") && exists("share_name") && exists("schema_name")) {
     paste0("/shares/", share_name, "/schemas/", schema_name, "/tables/", table_name, "/query"),
     method = "POST"
   )
-  
+
   if (!is.null(table_files_result)) {
     cat("Table files information available\n")
     # This would contain Parquet file URLs that can be downloaded
@@ -269,12 +269,12 @@ if (exists("table_name") && exists("share_name") && exists("schema_name")) {
 # if (exists("df_r") && nrow(df_r) > 0) {
 #   cat("Dataset Summary:\n")
 #   summary(df_r)
-#   
+#
 #   # Create visualizations
 #   numeric_cols <- sapply(df_r, is.numeric)
 #   if (any(numeric_cols)) {
 #     numeric_col <- names(df_r)[which(numeric_cols)[1]]
-#     
+#
 #     p <- ggplot(df_r, aes_string(x = numeric_col)) +
 #       geom_histogram(bins = 30, fill = "steelblue", alpha = 0.7) +
 #       labs(title = paste("Distribution of", numeric_col)) +

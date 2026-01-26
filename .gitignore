@@ -10,7 +10,7 @@
 # data-raw keep structure but ignore contents
 data-raw/features/*
 data-raw/features/*/*
-!data-raw/features/*/ 
+!data-raw/features/*/
 !data-raw/features/.gitkeep
 !data-raw/features/*/.gitkeep
 
@@ -22,7 +22,7 @@ output/*
 logs/*
 !logs/.gitkeep
 
-# temp folders and files 
+# temp folders and files
 staging
 dump/hidden/*
 TODO.md

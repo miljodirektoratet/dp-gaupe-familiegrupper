@@ -45,7 +45,7 @@ Suggests:
     here,
     knitr,
     leaflet,
-    leaflet.extras2, 
+    leaflet.extras2,
     viridis,
     mapview
 Remotes:

@@ -1,4 +1,4 @@
-# This script calculates the number of family groups 
+# This script calculates the number of family groups
 
 rm(list=ls()) # Clear workspace
 
@@ -61,7 +61,7 @@ dat$datetime2<-as.POSIXct(paste0(dat$aktivitetsdato_til, " ", dat$aktivitetstid_
 dat<-st_as_sf(dat)
 
 dat<-dat %>%
-  group_by(rovbase_id) %>% 
+  group_by(rovbase_id) %>%
   summarize(geometry = st_union(geometry),
             datetime1 = datetime1[1],
             datetime2 = datetime2[1])
@@ -79,9 +79,9 @@ for(ii in which(lengths(ind)>1)){
   dat[ii,]$prey<-prey[unlist(ind[which(lengths(ind)>1)]),]
 }
 
-fam_groups<-grouplynx_diff_starts(RovbaseID = dat$rovbase_id, 
-                                  activity_from = dat$datetime1, 
-                                  activity_to = dat$datetime2, 
+fam_groups<-grouplynx_diff_starts(RovbaseID = dat$rovbase_id,
+                                  activity_from = dat$datetime1,
+                                  activity_to = dat$datetime2,
                                   geometry = dat$geometry, prey_class = dat$prey, crs=3006)
 
 
@@ -95,9 +95,9 @@ which.order=fam_groups$sorting[which.min(fam_groups[,(which.col+1)])]
 reversed<-length(strsplit(which.order, "_")[[1]][1])==2
 which.order<-strsplit(which.order, "_")[[1]][1]
 
-my.grouped.obs<-grouplynx(RovbaseID = dat$rovbase_id, activity_from = dat$datetime1, activity_to =dat$datetime2, 
-                       geometry = dat$geometry, prey_class = dat$prey, clust=which.method, 
-                       which.order=which.order, reversed=reversed, pretty=F, crs=3006, save_geometry=T, 
+my.grouped.obs<-grouplynx(RovbaseID = dat$rovbase_id, activity_from = dat$datetime1, activity_to =dat$datetime2,
+                       geometry = dat$geometry, prey_class = dat$prey, clust=which.method,
+                       which.order=which.order, reversed=reversed, pretty=F, crs=3006, save_geometry=T,
                        path="Grouped/", obs_pnt = obs_pnt)
 
 # Create leaflet for visualization
@@ -125,26 +125,26 @@ my.map<-leaflet() %>%
     group = "Esri.WorldImagery"
   ) %>%
   addScaleBar(position="bottomleft", options=scaleBarOptions(maxWidth=200)) %>%
-  addCircleMarkers(color="red", 
+  addCircleMarkers(color="red",
                    opacity=1, fillOpacity=1,
                    labelOptions = labelOptions(noHide = F, direction = 'top', textOnly = T,
                                                style=list("font-size" = "20px")),
                    label= my.cent$groupID1,
                    radius=4,
-                   data=my.cent) %>% 
-  addCircleMarkers(color="black", 
+                   data=my.cent) %>%
+  addCircleMarkers(color="black",
                    opacity=2, fillOpacity=1,
                    labelOptions = labelOptions(noHide = F, direction = 'top', textOnly = T,
                                                style=list("font-size" = "20px")),
                    label= obs$RovbaseID,
                    radius=1,
-                   data=obs) %>% 
-  addPolylines(color="black", 
+                   data=obs) %>%
+  addPolylines(color="black",
                opacity=1, fillOpacity=1,
-               data= my.lines, weight=3) %>% 
-  addPolylines(color="black", 
+               data= my.lines, weight=3) %>%
+  addPolylines(color="black",
                opacity=1, fillOpacity=1,
-               data=dat_spor, weight=0.5) %>% 
+               data=dat_spor, weight=0.5) %>%
   addLayersControl(# position it on the topleft
     position = "topleft",
     overlayGroups = as.character(c(sort(unique(obs$RS)))),

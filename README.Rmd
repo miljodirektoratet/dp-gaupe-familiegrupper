@@ -310,4 +310,3 @@ This repository leverages the following tools from the R community:
 The package **dp-gaupe-familiegrupper** is released under the MIT License. See [LICENSE](LICENSE) file for details.
 
 ---
-

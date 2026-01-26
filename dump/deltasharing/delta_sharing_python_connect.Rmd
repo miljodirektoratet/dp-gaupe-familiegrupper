@@ -148,21 +148,21 @@ cat("Table:", table_name, "\n")
 # Simple approach: Load data from the first table
 if (exists("table_name")) {
   cat("Loading data from:", table_name, "\n")
-  
+
   # Create table URL using config file format
   table_url <- paste0(config_path, "#", share_name, ".", schema_name, ".", table_name)
   cat("Table URL:", table_url, "\n")
-  
+
   # Load the data
   df_pandas <- delta_sharing$load_as_pandas(table_url)
   df_r <- reticulate::py_to_r(df_pandas)
-  
+
   # Show basic info
   cat("Data loaded successfully!\n")
   cat("Rows:", nrow(df_r), "\n")
   cat("Columns:", ncol(df_r), "\n")
   cat("Column names:", paste(names(df_r), collapse = ", "), "\n")
-  
+
   # Show first few rows
   print(head(df_r))
 }
@@ -179,45 +179,45 @@ if (exists("df_r")) {
     dir.create(output_dir, recursive = TRUE)
     cat("Created directory:", output_dir, "\n")
   }
-  
+
   # Check for potential geometry columns
-  potential_geom_cols <- names(df_r)[grepl("geom|geometry|shape|wkt|wkb|point|polygon|line", 
+  potential_geom_cols <- names(df_r)[grepl("geom|geometry|shape|wkt|wkb|point|polygon|line",
                                            names(df_r), ignore.case = TRUE)]
-  
+
   if (length(potential_geom_cols) > 0) {
     cat("Potential geometry columns found:", paste(potential_geom_cols, collapse = ", "), "\n")
-    
+
     # Load required libraries for spatial data
     library(sf)
     library(arrow)
-    
+
     # Try to create spatial data frame
     tryCatch({
       # Assume first potential geometry column contains WKT
       geom_col <- potential_geom_cols[1]
       cat("Using geometry column:", geom_col, "\n")
-      
+
       # Create sf object from WKT
       sf_data <- st_as_sf(df_r, wkt = geom_col)
-      
+
       # Create filename with timestamp
       timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
       filename <- paste0(table_name, "_", timestamp, ".geoparquet")
       filepath <- file.path(output_dir, filename)
-      
+
       # Save as GeoParquet
       write_parquet(sf_data, filepath)
-      
+
       cat("Data saved as GeoParquet:\n")
       cat("File:", filepath, "\n")
       cat("Rows:", nrow(sf_data), "\n")
       cat("Columns:", ncol(sf_data), "\n")
       cat("Geometry column:", geom_col, "\n")
-      
+
       # Show file size
       file_size_mb <- file.size(filepath) / (1024^2)
       cat("File size:", round(file_size_mb, 2), "MB\n")
-      
+
       # Show CRS info
       crs_info <- st_crs(sf_data)
       if (!is.na(crs_info)) {
@@ -225,48 +225,41 @@ if (exists("df_r")) {
       } else {
         cat("CRS: Not defined\n")
       }
-      
+
     }, error = function(e) {
       cat("Could not create spatial data frame:", e$message, "\n")
       cat("Saving as regular Parquet instead...\n")
-      
+
       # Fallback to regular Parquet
       timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
       filename <- paste0(table_name, "_", timestamp, "_regular.parquet")
       filepath <- file.path(output_dir, filename)
-      
+
       library(arrow)
       write_parquet(df_r, filepath)
       cat("Saved as regular Parquet:", filepath, "\n")
     })
-    
+
   } else {
     cat("No geometry columns detected. Data appears to be non-spatial.\n")
     cat("Saving as regular Parquet instead...\n")
-    
+
     # Save as regular Parquet
     timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
     filename <- paste0(table_name, "_", timestamp, "_nonspatial.parquet")
     filepath <- file.path(output_dir, filename)
-    
+
     library(arrow)
     write_parquet(df_r, filepath)
-    
+
     cat("Data saved as Parquet:\n")
     cat("File:", filepath, "\n")
     cat("Rows:", nrow(df_r), "\n")
     cat("Columns:", ncol(df_r), "\n")
-    
+
     # Show file size
     file_size_mb <- file.size(filepath) / (1024^2)
     cat("File size:", round(file_size_mb, 2), "MB\n")
   }
 }
 ```
-
-
-
-
-
-
-
