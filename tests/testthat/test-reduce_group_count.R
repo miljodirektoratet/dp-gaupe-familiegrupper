@@ -1,4 +1,4 @@
-test_that("split_groups merges groups when beneficial", {
+test_that("reduce_group_count merges groups when beneficial", {
   # Create scenario where groups 1 and 2 can merge
   group_assignments <- c(1, 1, 2, 3, 3)
 
@@ -19,7 +19,7 @@ test_that("split_groups merges groups when beneficial", {
     105, 103, 100, 8, 0
   ), nrow = 5, byrow = TRUE)
 
-  result <- split_groups(group_assignments, grouping_indicator, distance_matrix)
+  result <- reduce_group_count(group_assignments, grouping_indicator, distance_matrix)
 
   expect_type(result, "double")
   expect_equal(length(result), 5)
@@ -38,7 +38,7 @@ test_that("split_groups merges groups when beneficial", {
   expect_false(result[1] == result[4])
 })
 
-test_that("split_groups handles single observation reassignment", {
+test_that("reduce_group_count handles single observation reassignment", {
   # Group with single observation that can join another group
   group_assignments <- c(1, 1, 2, 3, 3)
 
@@ -53,13 +53,13 @@ test_that("split_groups handles single observation reassignment", {
 
   distance_matrix <- diag(5)
 
-  result <- split_groups(group_assignments, grouping_indicator, distance_matrix)
+  result <- reduce_group_count(group_assignments, grouping_indicator, distance_matrix)
 
   expect_equal(length(result), 5)
   expect_true(length(unique(result)) <= length(unique(group_assignments)))
 })
 
-test_that("split_groups preserves groups when splitting not beneficial", {
+test_that("reduce_group_count preserves groups when splitting not beneficial", {
   # Groups that cannot be split
   group_assignments <- c(1, 1, 2, 2)
 
@@ -73,7 +73,7 @@ test_that("split_groups preserves groups when splitting not beneficial", {
 
   distance_matrix <- diag(4)
 
-  result <- split_groups(group_assignments, grouping_indicator, distance_matrix)
+  result <- reduce_group_count(group_assignments, grouping_indicator, distance_matrix)
 
   expect_equal(length(result), 4)
 
@@ -86,42 +86,42 @@ test_that("split_groups preserves groups when splitting not beneficial", {
   expect_false(result[1] == result[3])
 })
 
-test_that("split_groups validates inputs", {
+test_that("reduce_group_count validates inputs", {
   valid_groups <- c(1, 1, 2)
   valid_indicator <- matrix(TRUE, 3, 3)
   valid_distance <- diag(3)
 
   # Invalid group_assignments type
   expect_error(
-    split_groups("invalid", valid_indicator, valid_distance),
+    reduce_group_count("invalid", valid_indicator, valid_distance),
     "group_assignments must be a numeric or integer vector"
   )
 
   # Invalid grouping_indicator type
   expect_error(
-    split_groups(valid_groups, "invalid", valid_distance),
+    reduce_group_count(valid_groups, "invalid", valid_distance),
     "grouping_indicator must be a matrix or data.frame"
   )
 
   # Invalid distance_matrix type
   expect_error(
-    split_groups(valid_groups, valid_indicator, "invalid"),
+    reduce_group_count(valid_groups, valid_indicator, "invalid"),
     "distance_matrix must be a matrix or data.frame"
   )
 
   # Dimension mismatch
   expect_error(
-    split_groups(valid_groups, matrix(TRUE, 4, 4), valid_distance),
+    reduce_group_count(valid_groups, matrix(TRUE, 4, 4), valid_distance),
     "grouping_indicator dimensions must match length of group_assignments"
   )
 
   expect_error(
-    split_groups(valid_groups, valid_indicator, matrix(0, 4, 4)),
+    reduce_group_count(valid_groups, valid_indicator, matrix(0, 4, 4)),
     "distance_matrix dimensions must match length of group_assignments"
   )
 })
 
-test_that("split_groups works with data.frame inputs", {
+test_that("reduce_group_count works with data.frame inputs", {
   group_assignments <- c(1, 1, 2)
 
   grouping_df <- data.frame(
@@ -136,13 +136,13 @@ test_that("split_groups works with data.frame inputs", {
     c = c(100, 105, 0)
   )
 
-  result <- split_groups(group_assignments, grouping_df, distance_df)
+  result <- reduce_group_count(group_assignments, grouping_df, distance_df)
 
   expect_equal(length(result), 3)
   expect_true(is.numeric(result))
 })
 
-test_that("split_groups works with numeric (0/1) grouping indicator", {
+test_that("reduce_group_count works with numeric (0/1) grouping indicator", {
   group_assignments <- c(1, 1, 2, 2)
 
   # Numeric grouping indicator
@@ -155,13 +155,13 @@ test_that("split_groups works with numeric (0/1) grouping indicator", {
 
   distance_matrix <- diag(4)
 
-  result <- split_groups(group_assignments, grouping_indicator, distance_matrix)
+  result <- reduce_group_count(group_assignments, grouping_indicator, distance_matrix)
 
   expect_equal(length(result), 4)
   expect_true(is.numeric(result))
 })
 
-test_that("split_groups selects best alternative based on distance", {
+test_that("reduce_group_count selects best alternative based on distance", {
   # Observation can join multiple groups - should pick one with minimum distance
   group_assignments <- c(1, 2, 2, 3, 3)
 
@@ -183,7 +183,7 @@ test_that("split_groups selects best alternative based on distance", {
     55, 65, 63, 8, 0
   ), nrow = 5, byrow = TRUE)
 
-  result <- split_groups(group_assignments, grouping_indicator, distance_matrix)
+  result <- reduce_group_count(group_assignments, grouping_indicator, distance_matrix)
 
   expect_equal(length(result), 5)
 
@@ -191,24 +191,24 @@ test_that("split_groups selects best alternative based on distance", {
   expect_equal(result[1], result[2])
 })
 
-test_that("split_groups handles all observations in one group", {
+test_that("reduce_group_count handles all observations in one group", {
   group_assignments <- c(1, 1, 1, 1)
   grouping_indicator <- matrix(TRUE, 4, 4)
   distance_matrix <- diag(4)
 
-  result <- split_groups(group_assignments, grouping_indicator, distance_matrix)
+  result <- reduce_group_count(group_assignments, grouping_indicator, distance_matrix)
 
   expect_equal(length(result), 4)
   expect_equal(length(unique(result)), 1)
 })
 
-test_that("split_groups handles each observation in separate group", {
+test_that("reduce_group_count handles each observation in separate group", {
   group_assignments <- c(1, 2, 3, 4)
   grouping_indicator <- diag(4) == 1
   distance_matrix <- matrix(100, 4, 4)
   diag(distance_matrix) <- 0
 
-  result <- split_groups(group_assignments, grouping_indicator, distance_matrix)
+  result <- reduce_group_count(group_assignments, grouping_indicator, distance_matrix)
 
   expect_equal(length(result), 4)
   # Should maintain 4 separate groups (cannot merge)

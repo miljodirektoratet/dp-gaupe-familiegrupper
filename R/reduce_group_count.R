@@ -1,8 +1,8 @@
-#' Split and Optimize Lynx Family Groups
+#' Reduce Lynx Family Group Count by Reassignment
 #'
-#' Iteratively attempts to split groups and relocate observations to alternative
-#' groups to reduce the total number of family groups while maintaining grouping
-#' validity based on spatial-temporal criteria.
+#' Iteratively attempts to reduce the total number of family groups by reassigning
+#' observations to alternative groups while maintaining grouping validity based on
+#' spatial-temporal criteria.
 #'
 #' @param group_assignments An integer vector of initial group assignments for each observation.
 #' @param grouping_indicator A logical or numeric matrix where `TRUE` (or 1) indicates
@@ -45,12 +45,12 @@
 #' ), nrow = 5, byrow = TRUE)
 #'
 #' # Optimize groups
-#' optimized <- split_groups(group_assignments, grouping_indicator, distance_matrix)
+#' optimized <- reduce_group_count(group_assignments, grouping_indicator, distance_matrix)
 #' # Expected: Groups 1 and 2 merged since all can group together
 #' }
 #'
 #' @export
-split_groups <- function(group_assignments,
+reduce_group_count <- function(group_assignments,
                          grouping_indicator,
                          distance_matrix) {
   # Input validation
