@@ -22,7 +22,8 @@ Imports:
     plyr,
     tictoc,
     terra,
-    arrow
+    arrow,
+    rlang
 Suggests:
     covr,
     csdata,

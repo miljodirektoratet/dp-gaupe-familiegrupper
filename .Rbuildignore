@@ -42,7 +42,11 @@
 ^dump$
 ^logs$
 ^notebooks$
+^output$
 ^renv$
 ^renv\.lock$
 ^renv\.lock\..*\.bak$
 ^scripts$
+^staging$
+^MIGRATION_STATUS\.md$
+\.gitkeep$
