@@ -97,12 +97,19 @@ if (grepl("/home/rstudio/workspace", getwd())) {
 cat("Base path set to:", base_path, "\n")
 cat("Current working directory:", getwd(), "\n")
 
-# Load migrated package functions (order_observations, create_time_matrix, create_distance_matrix)
+# Load migrated package functions (order_observations, create_time_matrix, create_distance_matrix, 
+# create_centerpoints, create_lines, apply_distance_rules)
 devtools::load_all(file.path(base_path))
 
 # Source functions not yet migrated to package
-source(file.path(base_path, "staging/Functions/Function_GroupLynxOld_MultipleStart_Ver2.R"))
+# These are needed by grouplynx() and grouplynx_diff_starts()
+source(file.path(base_path, "staging/Functions/Function_CreateOldDistanceRules.R"))
+source(file.path(base_path, "staging/Functions/Function_HierarcichalClustering.R"))
+source(file.path(base_path, "staging/Functions/Function_CustomClustering.R"))
+source(file.path(base_path, "staging/Functions/Function_SplitGroups.R"))
+source(file.path(base_path, "staging/Functions/Function_PrettyLines.R"))
 source(file.path(base_path, "staging/Functions/Function_GroupLynxOld_Ver2.R"))
+source(file.path(base_path, "staging/Functions/Function_GroupLynxOld_MultipleStart_Ver2.R"))
 ```
 
 ## 2. Load Data
@@ -150,15 +157,48 @@ dat <- lynx_family_test_data
 ## 7. Calculate Family Groups
 
 ```{r calculate-groups}
-# Run main grouping function
+# Run main grouping function with multiple start configurations
+# This tests different clustering methods and orderings to find optimal grouping
 
-dat_ordered <- order_observations(dat, time_column = "datotid_fra")
-time_mat <- create_time_matrix(dat_ordered$datotid_fra, dat_ordered$datotid_til)
-dist_mat <- create_distance_matrix(dat_ordered$geometry)
-rule_mat <- apply_distance_rules(time_mat, dat_ordered$byttedyr)  # uses lut_distance_rules by default
+fam_groups <- grouplynx_diff_starts(
+  RovbaseID = dat$rovbase_id,
+  activity_from = dat$datotid_fra,
+  activity_to = dat$datotid_til,
+  geometry = dat$geometry,
+  prey_class = dat$byttedyr,
+  clust = "both",  # Test both hierarchical and custom clustering
+  split = TRUE,
+  pretty = TRUE,
+  crs = 3006
+)
 
-# fam_groups <- <your grouping logic here>
-fam_groups <- NULL  # Placeholder
+# Display results: grouplynx_diff_starts tests 30 different combinations:
+# - 15 ordering strategies (time, PCA1, PCA2, north-south, east-west, 5 random)
+# - 2 clustering algorithms (hierarchical vs custom)
+# "Best" = fewest groups (tightest clustering)
+
+cat("Family groups calculated\n")
+print(fam_groups)
+cat("\n")
+
+# Find best hierarchical result
+
+cat("Find best clustering results (e.g. fewest groups):\n")
+best_hclust_idx <- which.min(fam_groups$n.hclust)
+cat("Best hierarchical:", fam_groups$sorting[best_hclust_idx], 
+    "with", fam_groups$n.hclust[best_hclust_idx], "groups\n")
+
+# Find best custom clustering result  
+best_custom_idx <- which.min(fam_groups$n.custom)
+cat("Best custom:", fam_groups$sorting[best_custom_idx],
+    "with", fam_groups$n.custom[best_custom_idx], "groups\n")
+
+# Overall best (fewest groups)
+if (fam_groups$n.hclust[best_hclust_idx] < fam_groups$n.custom[best_custom_idx]) {
+  cat("\nOverall best: hierarchical with", fam_groups$n.hclust[best_hclust_idx], "groups\n")
+} else {
+  cat("\nOverall best: custom with", fam_groups$n.custom[best_custom_idx], "groups\n")
+}
 ```
 
 ## 8. Post-processing for Visualization
