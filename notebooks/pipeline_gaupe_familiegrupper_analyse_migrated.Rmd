@@ -14,80 +14,28 @@ output:
 This notebook walks through the spatial analysis and grouping of lynx family
 observations, using custom clustering and interactive mapping. The main steps include:
 
-1. Loading and preparing spatial data
-2. Assigning prey categories
-3. Grouping observations into family groups using custom clustering
-4. Visualizing results interactively
-
-Tips for installing required packages:
-- If packages are not installed, add them to imports and install using:
-  ```R
-  usethis::use_package("package_name")
-  usethis::use_package("package_name")
-  ```
-- To avoid expression limit errors, you can increase the limit using:
-  ```R
-  options(expressions = 50000)
-  ```
-- Arrow package can be difficult to install from CRAN, R-Universe provides pre-compiled
-binaries. Refer to refer https://arrow.apache.org/docs/r/ for detailed installation instructions.
-  ```R
-  install.packages("arrow", repos = c("https://apache.r-universe.dev", "https://cloud.r-project.org"))
-  ```
+1. Loading and exploring test data
+2. Comparing grouping methods (sensitivity analysis)
+3. Grouping observations with optimal configuration
+4. Creating visualization objects
+5. Interactive mapping
+6. Exporting results (user controls where/how)
 
 ## 1. Setup and Load Libraries
 
 ```{r setup, include=FALSE}
-# Clear workspace and load required libraries
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+
+# Clear workspace
 rm(list = ls())
+```
 
-# Suppress package startup messages
-# suppressPackageStartupMessages({
-
-# Load libraries
-# If packages are not installed: add them to imports and install
-# usethis::use_package("package_name")
-# TIP: run this  options(expressions = 50000)
-# options(expressions = 50000)
-# install.packages("arrow", type = "binary")
-
-if (!requireNamespace("arrow", quietly = TRUE)) {
-  message(
-    "Please install 'arrow' from R-Universe for best compatibility:\n",
-    "install.packages('arrow', repos = c('https://apache.r-universe.dev', 'https://cloud.r-project.org'))"
-  )
-}
-
-# Load sf with s2 enabled
-library(s2)
-library(sf)
-sf::sf_use_s2(TRUE)
-
-# Print GEOS, GDAL, PROJ versions
-cat("GEOS version:", sf::sf_extSoftVersion()["GEOS"], "\n")
-cat("GDAL version:", sf::sf_extSoftVersion()["GDAL"], "\n")
-cat("PROJ version:", sf::sf_extSoftVersion()["PROJ"], "\n")
-
-# Dply will be used as default, when functions exist in both packages
-
-# Load required libraries in quiet mode
-libs <- c("s2", "sf", "plyr", "dplyr", "tictoc", "arrow", "leaflet", "mapview", "leaflet.extras2", "viridis", "htmlwidgets")
-invisible(lapply(libs, function(pkg) suppressPackageStartupMessages(library(pkg, character.only = TRUE))))
-
-# Detect if running in Docker container or local environment
-# Check if we're actually in the rstudio workspace directory
-if (grepl("/home/rstudio/workspace", getwd())) {
-  base_path <- "/home/rstudio/workspace"
-} else {
-  base_path <- "/home/wilaca/git/miljodirektoratet/dp-gaupe-familiegrupper"
-}
-
-# Load required libraries in quiet mode
-libs <- c("s2", "sf", "plyr", "dplyr", "tictoc", "arrow", "leaflet", "mapview", "leaflet.extras2", "viridis", "htmlwidgets")
-invisible(lapply(libs, function(pkg) suppressPackageStartupMessages(library(pkg, character.only = TRUE))))
-
-# Detect if running in Docker container or local environment
-# Check if we're actually in the rstudio workspace directory
+```{r load-libraries}
+# Detect base path first (needed for loading package)
 if (grepl("/home/rstudio/workspace", getwd())) {
   base_path <- "/home/rstudio/workspace"
 } else {
@@ -97,187 +45,327 @@ if (grepl("/home/rstudio/workspace", getwd())) {
 cat("Base path set to:", base_path, "\n")
 cat("Current working directory:", getwd(), "\n")
 
-# Load all migrated package functions including:
-# - order_observations, create_time_matrix, create_distance_matrix
-# - create_center_points, create_lines, apply_distance_rules
-# - cluster_hierarchical, cluster_custom
-# - reduce_group_count, minimize_group_distances
-devtools::load_all(file.path(base_path))
+# Load gaupefam package (development version)
+devtools::load_all(base_path)
 
-# Source functions not yet migrated to package
-# Only grouplynx() and grouplynx_multiple_starts() remain
-source(file.path(base_path, "staging/Functions/Function_GroupLynxOld_Ver2.R"))
-source(file.path(base_path, "staging/Functions/Function_GroupLynxOld_MultipleStart_Ver2.R"))
+# Load other required packages
+library(sf)          # Spatial data handling
+library(dplyr)       # Data manipulation
+library(leaflet)     # Interactive maps
+library(htmlwidgets) # Save interactive maps
+library(viridis)     # Color palettes
+
+# Enable s2 for spherical geometry
+sf::sf_use_s2(TRUE)
+
+# Print software versions
+cat("GEOS version:", sf::sf_extSoftVersion()["GEOS"], "\n")
+cat("GDAL version:", sf::sf_extSoftVersion()["GDAL"], "\n")
+cat("PROJ version:", sf::sf_extSoftVersion()["PROJ"], "\n")
 ```
 
-## 2. Load Data
+## 2. Load and Explore Data
 
 ```{r load-data, fig.width=10, fig.height=8}
 # Load test data from gaupefam package
 data(lynx_family_test_data)
 
+# Assign to shorter variable name
+dat <- lynx_family_test_data
+
 # Check the data
-cat("Number of observations:", nrow(lynx_family_test_data), "\n")
-print(lynx_family_test_data)
+cat("Number of observations:", nrow(dat), "\n")
+print(dat)
 
 # Simple plot of test data
 par(mfrow = c(1, 2))
 
-# Plot 1: Points only
-plot(st_geometry(lynx_family_test_data),
+# Plot 1: Spatial distribution
+plot(st_geometry(dat),
   pch = 19, col = "red", cex = 2,
-  main = "Observation distance (m)", axes = TRUE
+  main = "Spatial Distribution", axes = TRUE
 )
-text(st_coordinates(lynx_family_test_data),
-  labels = lynx_family_test_data$rovbase_id,
+text(st_coordinates(dat),
+  labels = dat$rovbase_id,
   pos = 3, cex = 1
 )
 
-# Plot 2: Timeline
-plot(lynx_family_test_data$datotid_fra, 1:nrow(lynx_family_test_data),
+# Plot 2: Temporal distribution
+plot(dat$datotid_fra, 1:nrow(dat),
   pch = 19, col = "blue", cex = 2,
-  main = "Observation time (days)",
+  main = "Temporal Distribution",
   xlab = "Date", ylab = "Observation ID",
   yaxt = "n"
 )
-axis(2, at = 1:nrow(lynx_family_test_data), labels = lynx_family_test_data$rovbase_id)
-segments(lynx_family_test_data$datotid_fra, 1:nrow(lynx_family_test_data),
-  lynx_family_test_data$datotid_til, 1:nrow(lynx_family_test_data),
+axis(2, at = 1:nrow(dat), labels = dat$rovbase_id)
+segments(dat$datotid_fra, 1:nrow(dat),
+  dat$datotid_til, 1:nrow(dat),
   col = "blue", lwd = 2
 )
 
 par(mfrow = c(1, 1))
-
-# Assign to dat for the rest of the pipeline
-dat <- lynx_family_test_data
 ```
 
-## 7. Calculate Family Groups
+## 3. Compare Grouping Methods (Sensitivity Analysis)
 
-```{r calculate-groups}
-# Run main grouping function with multiple start configurations
-# This tests different clustering methods and orderings to find optimal grouping
+```{r compare-methods}
+# Test 30 different configurations to find optimal grouping:
+# - 2 clustering methods (hierarchical, custom)
+# - 15 ordering strategies (time, pca1, pca2, north-south, east-west × forward/reverse + 5 random)
 
-fam_groups <- grouplynx_diff_starts(
-  RovbaseID = dat$rovbase_id,
-  activity_from = dat$datotid_fra,
-  activity_to = dat$datotid_til,
-  geometry = dat$geometry,
-  prey_class = dat$byttedyr,
-  clust = "both", # Test both hierarchical and custom clustering
-  split = TRUE,
-  pretty = TRUE,
-  crs = 3006
+cat("Running sensitivity analysis (30 configurations)...\n\n")
+
+comparison <- compare_grouping_methods(
+  data = dat,
+  optimize_group_count = TRUE,
+  optimize_distances = TRUE
 )
 
-# Display results: grouplynx_diff_starts tests 30 different combinations:
-# - 15 ordering strategies (time, PCA1, PCA2, north-south, east-west, 5 random)
-# - 2 clustering algorithms (hierarchical vs custom)
-# "Best" = fewest groups (tightest clustering)
+# Display results
+print(comparison)
 
-cat("Family groups calculated\n")
-print(fam_groups)
-cat("\n")
+# Summary statistics
+cat("\nHierarchical clustering:\n")
+cat("  Min groups:", min(comparison$n_groups_hierarchical), "\n")
+cat("  Max groups:", max(comparison$n_groups_hierarchical), "\n")
+cat("  Mean groups:", round(mean(comparison$n_groups_hierarchical), 2), "\n\n")
 
-# Find best hierarchical result
+cat("Custom clustering:\n")
+cat("  Min groups:", min(comparison$n_groups_custom), "\n")
+cat("  Max groups:", max(comparison$n_groups_custom), "\n")
+cat("  Mean groups:", round(mean(comparison$n_groups_custom), 2), "\n\n")
 
-cat("Find best clustering results (e.g. fewest groups):\n")
-best_hclust_idx <- which.min(fam_groups$n.hclust)
-cat(
-  "Best hierarchical:", fam_groups$sorting[best_hclust_idx],
-  "with", fam_groups$n.hclust[best_hclust_idx], "groups\n"
-)
+# Find best configurations
+best_hierarchical <- comparison[which.min(comparison$n_groups_hierarchical), ]
+cat("Best hierarchical configuration:\n")
+cat("  Method:", best_hierarchical$ordering_method, "\n")
+cat("  Reversed:", best_hierarchical$reversed, "\n")
+cat("  Groups:", best_hierarchical$n_groups_hierarchical, "\n\n")
 
-# Find best custom clustering result
-best_custom_idx <- which.min(fam_groups$n.custom)
-cat(
-  "Best custom:", fam_groups$sorting[best_custom_idx],
-  "with", fam_groups$n.custom[best_custom_idx], "groups\n"
-)
+best_custom <- comparison[which.min(comparison$n_groups_custom), ]
+cat("Best custom configuration:\n")
+cat("  Method:", best_custom$ordering_method, "\n")
+cat("  Reversed:", best_custom$reversed, "\n")
+cat("  Groups:", best_custom$n_groups_custom, "\n")
+```
 
-# Overall best (fewest groups)
-if (fam_groups$n.hclust[best_hclust_idx] < fam_groups$n.custom[best_custom_idx]) {
-  cat("\nOverall best: hierarchical with", fam_groups$n.hclust[best_hclust_idx], "groups\n")
+## 4. Group Observations with Best Configuration
+
+```{r group-observations}
+# Determine best overall configuration
+if (best_hierarchical$n_groups_hierarchical < best_custom$n_groups_custom) {
+  best_method <- "cluster_hierarchical"
+  best_ordering <- best_hierarchical$ordering_method
+  best_reversed <- best_hierarchical$reversed
+  n_groups <- best_hierarchical$n_groups_hierarchical
 } else {
-  cat("\nOverall best: custom with", fam_groups$n.custom[best_custom_idx], "groups\n")
+  best_method <- "cluster_custom"
+  best_ordering <- best_custom$ordering_method
+  best_reversed <- best_custom$reversed
+  n_groups <- best_custom$n_groups_custom
 }
-```
 
-## 8. Post-processing for Visualization
+cat("Using best configuration:\n")
+cat("  Clustering method:", best_method, "\n")
+cat("  Ordering method:", best_ordering, "\n")
+cat("  Reversed:", best_reversed, "\n")
+cat("  Expected groups:", n_groups, "\n\n")
 
-```{r post-process}
-# Prepare observation points and determine best clustering
-obs_pnt <- st_as_sf(dat, coords = c("longitude", "latitude"), crs = 4326) %>%
-  st_transform(3006)
-
-which.col <- which.min(c(min(fam_groups$n.hclust), min(fam_groups$n.custom)))
-which.method <- c("cluster_hierarchical", "cluster_custom")[which.col]
-which.order <- fam_groups$sorting[which.min(fam_groups[, (which.col + 1)])]
-reversed <- length(strsplit(which.order, "_")[[1]][1]) == 2
-which.order <- strsplit(which.order, "_")[[1]][1]
-
-# TODO: remove file savign from this function return dataframes instead
-my.grouped.obs <- grouplynx(
-  RovbaseID = dat$rovbase_id, activity_from = dat$datotid_fra, activity_to = dat$datotid_til,
-  geometry = dat$geometry, prey_class = dat$byttedyr, clust = which.method,
-  which.order = which.order, reversed = reversed, pretty = FALSE, crs = 3006, save_geometry = TRUE,
-  path = file.path(base_path, "output/"), obs_pnt = obs_pnt, output_name = "test_data"
+# Run grouping with optimal configuration
+grouped_lynx <- group_lynx_families(
+  data = dat,
+  clustering_method = best_method,
+  ordering_method = best_ordering,
+  reversed = best_reversed,
+  optimize_group_count = TRUE,
+  optimize_distances = TRUE,
+  group_col = "gruppe_id"  # Norwegian naming convention
 )
+
+# Display results
+cat("Grouping results:\n")
+cat("  Total groups:", length(unique(grouped_lynx$gruppe_id)), "\n")
+cat("  Total observations:", nrow(grouped_lynx), "\n\n")
+
+# Group size distribution (detailed)
+group_sizes <- table(grouped_lynx$gruppe_id)
+cat("Group sizes (observations per group):\n")
+for (i in seq_along(group_sizes)) {
+  cat("  Group", names(group_sizes)[i], ":", group_sizes[i], "observations\n")
+}
+cat("\n")
 ```
 
-## 9. Interactive Map Visualization
+## 5. Create Visualization Objects
 
-```{r load-results}
-# Read generated gpkg files directly (no need for parquet conversion for test)
-obs <- st_read(file.path(base_path, "output/family_group_observations_test_data.gpkg"))
-my.cent <- st_read(file.path(base_path, "output/groupings_test_data.gpkg"))
-my.lines <- st_read(file.path(base_path, "output/groupings_lines_test_data.gpkg"))
+```{r create-viz-objects}
+# Extract group assignments (rovbase_id: gruppe_id)
+group_assignments <- grouped_lynx %>%
+  st_drop_geometry() %>%
+  select(rovbase_id, gruppe_id)
 
+# Join group assignments to "original" observations dataset for visualization
+lynx_family_observations <- lynx_family_test_data %>%  
+  left_join(group_assignments, by = "rovbase_id")
+
+# Calculate group centers (centroids) based on clustered observations
+lynx_family_group_centers <- create_center_points(
+  data = grouped_lynx,
+  group_col = "gruppe_id"
+)
+
+cat("Group centers calculated:\n")
+print(lynx_family_group_centers)
+
+# Create lines connecting observations to group centers
+lynx_family_group_lines <- create_lines(
+  observations = lynx_family_observations, # Observations with gruppe_id
+  centers = lynx_family_group_centers,                 # Group centroids
+  group_col = "gruppe_id"
+)
+
+# Add gruppe_id back to lines for visualization
+lynx_family_group_lines$gruppe_id <- lynx_family_observations$gruppe_id[match(lynx_family_group_lines$rovbase_id, lynx_family_observations$rovbase_id)]
+cat("\nConnection lines created:\n")
+cat("  Total lines:", nrow(lynx_family_group_lines), "\n")
+```
+
+## 6. Interactive Map Visualization
+
+```{r visualize-map, fig.width=10, fig.height=8}
 # Transform to WGS84 for leaflet
-obs <- st_transform(obs, 4326)
-my.cent <- st_transform(my.cent, 4326)
-my.lines <- st_transform(my.lines, 4326)
+grouped_wgs84 <- st_transform(lynx_family_observations, 4326)
+centers_wgs84 <- st_transform(lynx_family_group_centers, 4326)
+lines_wgs84 <- st_transform(lynx_family_group_lines, 4326)
+
+# Create color palette
+n_groups_final <- length(unique(grouped_wgs84$gruppe_id))
+pal <- colorFactor(viridis(n_groups_final, option = "turbo"), domain = grouped_wgs84$gruppe_id)
+
+# Create interactive map
+lynx_map <- leaflet() %>%
+  addProviderTiles(providers$OpenTopoMap) %>%
+  addProviderTiles(providers$Esri.WorldImagery, group = "Satellite") %>%
+  
+  # Add connection lines
+  addPolylines(
+    data = lines_wgs84,
+    color = ~pal(gruppe_id),
+    weight = 3,
+    opacity = 0.8
+  ) %>%
+  
+  # Add observation points
+  addCircleMarkers(
+    data = grouped_wgs84,
+    color = "black",
+    fillColor = ~pal(gruppe_id),
+    fillOpacity = 0.8,
+    radius = 6,
+    stroke = TRUE,
+    weight = 2,
+    popup = ~paste0(
+      "<strong>Observation ID:</strong> ", rovbase_id, "<br>",
+      "<strong>Group:</strong> ", gruppe_id, "<br>",
+      "<strong>Prey:</strong> ", byttedyr, "<br>",
+      "<strong>Date:</strong> ", format(datotid_fra, "%Y-%m-%d")
+    ),
+    label = ~as.character(rovbase_id)
+  ) %>%
+  
+  # Add group centers
+  addCircleMarkers(
+    data = centers_wgs84,
+    color = "red",
+    fillColor = "red",
+    fillOpacity = 1,
+    radius = 8,
+    stroke = TRUE,
+    weight = 2,
+    popup = ~paste0("<strong>Group Center</strong><br>Group ID: ", gruppe_id),
+    label = ~paste("Group", gruppe_id)
+  ) %>%
+  
+  # Add controls
+  addLayersControl(
+    baseGroups = c("OpenTopoMap", "Satellite"),
+    options = layersControlOptions(collapsed = FALSE)
+  ) %>%
+  
+  addScaleBar(position = "bottomleft") %>%
+  addMeasure(primaryLengthUnit = "meters", primaryAreaUnit = "sqmeters")
+
+# Display map
+lynx_map
 ```
 
+## 7. Export Results
 
-```{r visualize-map}
-# Create interactive leaflet map
-min.lat <- min(st_coordinates(obs)[, 2]) - 0.005
-max.lat <- max(st_coordinates(obs)[, 2]) + 0.005
-min.lon <- min(st_coordinates(obs)[, 1]) - 0.005
-max.lon <- max(st_coordinates(obs)[, 1]) + 0.005
+```{r export-results}
+# Create output directory if it doesn't exist
+output_dir <- file.path(base_path, "output")
+if (!dir.exists(output_dir)) {
+  dir.create(output_dir, recursive = TRUE)
+}
 
-my.map <- leaflet() %>%
-  addMeasure(primaryLengthUnit = "meters", primaryAreaUnit = "sqmeters") %>%
-  fitBounds(lng1 = min.lon, lng2 = max.lon, lat1 = min.lat, lat2 = max.lat) %>%
-  addProviderTiles(providers$OpenTopoMap) %>%
-  addProviderTiles("Esri.WorldImagery", group = "Esri.WorldImagery") %>%
-  addScaleBar(position = "bottomleft", options = scaleBarOptions(maxWidth = 200)) %>%
-  addCircleMarkers(
-    color = "red", opacity = 1, fillOpacity = 1,
-    labelOptions = labelOptions(
-      noHide = FALSE, direction = "top", textOnly = TRUE,
-      style = list("font-size" = "20px")
-    ),
-    label = my.cent$groupID1, radius = 4, data = my.cent
-  ) %>%
-  addCircleMarkers(
-    color = "black", opacity = 2, fillOpacity = 1,
-    labelOptions = labelOptions(
-      noHide = FALSE, direction = "top", textOnly = TRUE,
-      style = list("font-size" = "20px")
-    ),
-    label = obs$rovbase_id, radius = 1, data = obs
-  ) %>%
-  addPolylines(color = "black", opacity = 1, fillOpacity = 1, data = my.lines, weight = 3) %>%
-  addLayersControl(
-    position = "topleft",
-    options = layersControlOptions(collapsed = TRUE),
-    baseGroups = c("OpenTopoMap", "Esri.WorldImagery")
-  )
+# Save to GeoPackage (recommended for spatial data)
+st_write(
+  grouped_lynx,
+  file.path(output_dir, "lynx_family_group_observations_migrated.gpkg"),
+  delete_dsn = TRUE,
+  quiet = TRUE
+)
 
-my.map
+st_write(
+  lynx_family_group_centers,
+  file.path(output_dir, "lynx_family_group_centers_migrated.gpkg"),
+  delete_dsn = TRUE,
+  quiet = TRUE
+)
+
+st_write(
+  lynx_family_group_lines,
+  file.path(output_dir, "lynx_family_group_lines_migrated.gpkg"),
+  delete_dsn = TRUE,
+  quiet = TRUE
+)
+
+cat("Spatial data saved to GeoPackage:\n")
+cat("  -", file.path(output_dir, "lynx_family_group_observations_migrated.gpkg"), "\n")
+cat("  -", file.path(output_dir, "lynx_family_group_centers_migrated.gpkg"), "\n")
+cat("  -", file.path(output_dir, "lynx_family_group_lines_migrated.gpkg"), "\n\n")
+
+# Save as CSV (without geometry)
+results_table <- grouped_lynx %>%
+  st_drop_geometry() %>%
+  select(rovbase_id, datotid_fra, datotid_til, byttedyr, gruppe_id)
+
+write.csv(
+  results_table,
+  file.path(output_dir, "lynx_family_group_assignments_migrated.csv"),
+  row.names = FALSE
+)
+
+cat("Tabular data saved to CSV:\n")
+cat("  -", file.path(output_dir, "lynx_family_group_assignments_migrated.csv"), "\n\n")
+
+# Save comparison results
+write.csv(
+  comparison,
+  file.path(output_dir, "sensitivity_analysis_migrated.csv"),
+  row.names = FALSE
+)
+
+cat("Sensitivity analysis saved:\n")
+cat("  -", file.path(output_dir, "sensitivity_analysis_migrated.csv"), "\n\n")
 
 # Save interactive map
-saveWidget(my.map, file = file.path(base_path, "output/lynx_test_groups_map.html"))
+saveWidget(
+  lynx_map,
+  file = file.path(output_dir, "lynx_family_groups_map_migrated.html"),
+  selfcontained = TRUE
+)
+
+cat("Interactive map saved:\n")
+cat("  -", file.path(output_dir, "lynx_family_groups_map_migrated.html"), "\n")
 ```
