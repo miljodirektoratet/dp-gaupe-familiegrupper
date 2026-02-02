@@ -1,4 +1,4 @@
-#' Create Centerpoints for Grouped Observations
+#' Create Center Points for Grouped Observations
 #'
 #' Computes the centroid (mean X and Y coordinates) for each group in a spatial dataset and returns them as an sf object.
 #'
@@ -10,7 +10,7 @@
 #' @importFrom dplyr group_by summarise ungroup
 #' @importFrom rlang enquo as_name
 #' @export
-create_centerpoints <- function(data, group_col = "gruppe_id") {
+create_center_points <- function(data, group_col = "gruppe_id") {
   # Validate input
   if (!inherits(data, "sf")) stop("Input must be an sf object.")
   if (!(group_col %in% names(data))) stop(paste0("Input must have a '", group_col, "' column."))

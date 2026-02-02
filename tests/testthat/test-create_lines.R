@@ -11,7 +11,7 @@ test_that("create_lines returns correct lines for each observation", {
     lynx_family_test_data$rovbase_id <- seq_len(nrow(lynx_family_test_data))
   }
 
-  centers <- create_centerpoints(lynx_family_test_data, group_col = "gruppe_id")
+  centers <- create_center_points(lynx_family_test_data, group_col = "gruppe_id")
   lines <- create_lines(lynx_family_test_data, centers) # use defaults
 
   expect_s3_class(lines, "sf")

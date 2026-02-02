@@ -1,4 +1,4 @@
-test_that("create_centerpoints returns correct centroids for groups", {
+test_that("create_center_points returns correct centroids for groups", {
   skip_if_not_installed("sf")
   skip_if_not_installed("dplyr")
   skip_if_not_installed("rlang")
@@ -9,7 +9,7 @@ test_that("create_centerpoints returns correct centroids for groups", {
     lynx_family_test_data$gruppe_id <- rep(1:2, c(3, 4))
   }
 
-  result <- create_centerpoints(lynx_family_test_data, group_col = "gruppe_id")
+  result <- create_center_points(lynx_family_test_data, group_col = "gruppe_id")
   expect_s3_class(result, "sf")
   expect_equal(nrow(result), length(unique(lynx_family_test_data$gruppe_id)))
   expect_true(all(sf::st_geometry_type(result) == "POINT"))
