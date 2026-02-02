@@ -97,7 +97,7 @@ if (grepl("/home/rstudio/workspace", getwd())) {
 cat("Base path set to:", base_path, "\n")
 cat("Current working directory:", getwd(), "\n")
 
-# Load migrated package functions (order_observations, create_time_matrix, create_distance_matrix, 
+# Load migrated package functions (order_observations, create_time_matrix, create_distance_matrix,
 # create_centerpoints, create_lines, apply_distance_rules)
 devtools::load_all(file.path(base_path))
 
@@ -166,7 +166,7 @@ fam_groups <- grouplynx_diff_starts(
   activity_to = dat$datotid_til,
   geometry = dat$geometry,
   prey_class = dat$byttedyr,
-  clust = "both",  # Test both hierarchical and custom clustering
+  clust = "both", # Test both hierarchical and custom clustering
   split = TRUE,
   pretty = TRUE,
   crs = 3006
@@ -185,13 +185,17 @@ cat("\n")
 
 cat("Find best clustering results (e.g. fewest groups):\n")
 best_hclust_idx <- which.min(fam_groups$n.hclust)
-cat("Best hierarchical:", fam_groups$sorting[best_hclust_idx], 
-    "with", fam_groups$n.hclust[best_hclust_idx], "groups\n")
+cat(
+  "Best hierarchical:", fam_groups$sorting[best_hclust_idx],
+  "with", fam_groups$n.hclust[best_hclust_idx], "groups\n"
+)
 
-# Find best custom clustering result  
+# Find best custom clustering result
 best_custom_idx <- which.min(fam_groups$n.custom)
-cat("Best custom:", fam_groups$sorting[best_custom_idx],
-    "with", fam_groups$n.custom[best_custom_idx], "groups\n")
+cat(
+  "Best custom:", fam_groups$sorting[best_custom_idx],
+  "with", fam_groups$n.custom[best_custom_idx], "groups\n"
+)
 
 # Overall best (fewest groups)
 if (fam_groups$n.hclust[best_hclust_idx] < fam_groups$n.custom[best_custom_idx]) {
