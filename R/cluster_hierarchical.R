@@ -41,8 +41,8 @@
 #' @importFrom stats hclust as.dist cutree
 #' @export
 cluster_hierarchical <- function(grouping_index,
-                                  hclust_poly = 1,
-                                  cut_height = 1) {
+                                 hclust_poly = 1,
+                                 cut_height = 1) {
   # Input validation
   if (!is.matrix(grouping_index) && !is.data.frame(grouping_index)) {
     stop("grouping_index must be a matrix or data.frame")

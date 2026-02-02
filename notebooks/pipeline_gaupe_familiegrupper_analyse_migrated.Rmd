@@ -11,7 +11,7 @@ output:
 
 # Lynx Family Groups Analysis Pipeline
 
-This notebook walks through the spatial analysis and grouping of lynx family 
+This notebook walks through the spatial analysis and grouping of lynx family
 observations, using custom clustering and interactive mapping. The main steps include:
 
 1. Loading and preparing spatial data
@@ -22,14 +22,14 @@ observations, using custom clustering and interactive mapping. The main steps in
 Tips for installing required packages:
 - If packages are not installed, add them to imports and install using:
   ```R
-  usethis::use_package("package_name") 
+  usethis::use_package("package_name")
   usethis::use_package("package_name")
   ```
 - To avoid expression limit errors, you can increase the limit using:
   ```R
   options(expressions = 50000)
   ```
-- Arrow package can be difficult to install from CRAN, R-Universe provides pre-compiled 
+- Arrow package can be difficult to install from CRAN, R-Universe provides pre-compiled
 binaries. Refer to refer https://arrow.apache.org/docs/r/ for detailed installation instructions.
   ```R
   install.packages("arrow", repos = c("https://apache.r-universe.dev", "https://cloud.r-project.org"))
@@ -97,17 +97,15 @@ if (grepl("/home/rstudio/workspace", getwd())) {
 cat("Base path set to:", base_path, "\n")
 cat("Current working directory:", getwd(), "\n")
 
-# Load migrated package functions (order_observations, create_time_matrix, create_distance_matrix,
-# create_centerpoints, create_lines, apply_distance_rules)
+# Load all migrated package functions including:
+# - order_observations, create_time_matrix, create_distance_matrix
+# - create_center_points, create_lines, apply_distance_rules
+# - cluster_hierarchical, cluster_custom
+# - reduce_group_count, minimize_group_distances
 devtools::load_all(file.path(base_path))
 
 # Source functions not yet migrated to package
-# These are needed by grouplynx() and grouplynx_diff_starts()
-source(file.path(base_path, "staging/Functions/Function_CreateOldDistanceRules.R"))
-source(file.path(base_path, "staging/Functions/Function_HierarcichalClustering.R"))
-source(file.path(base_path, "staging/Functions/Function_CustomClustering.R"))
-source(file.path(base_path, "staging/Functions/Function_SplitGroups.R"))
-source(file.path(base_path, "staging/Functions/Function_PrettyLines.R"))
+# Only grouplynx() and grouplynx_multiple_starts() remain
 source(file.path(base_path, "staging/Functions/Function_GroupLynxOld_Ver2.R"))
 source(file.path(base_path, "staging/Functions/Function_GroupLynxOld_MultipleStart_Ver2.R"))
 ```
@@ -213,7 +211,7 @@ obs_pnt <- st_as_sf(dat, coords = c("longitude", "latitude"), crs = 4326) %>%
   st_transform(3006)
 
 which.col <- which.min(c(min(fam_groups$n.hclust), min(fam_groups$n.custom)))
-which.method <- c("h_clust", "custom")[which.col]
+which.method <- c("cluster_hierarchical", "cluster_custom")[which.col]
 which.order <- fam_groups$sorting[which.min(fam_groups[, (which.col + 1)])]
 reversed <- length(strsplit(which.order, "_")[[1]][1]) == 2
 which.order <- strsplit(which.order, "_")[[1]][1]

@@ -61,9 +61,10 @@ cluster_custom <- function(grouping_indicator) {
   # Convert to logical if numeric, preserving matrix structure
   if (is.numeric(grouping_indicator)) {
     dim_saved <- dim(grouping_indicator)
-    grouping_indicator <- matrix(as.logical(grouping_indicator), 
-                                  nrow = dim_saved[1], 
-                                  ncol = dim_saved[2])
+    grouping_indicator <- matrix(as.logical(grouping_indicator),
+      nrow = dim_saved[1],
+      ncol = dim_saved[2]
+    )
   }
 
   # Initialize group assignments

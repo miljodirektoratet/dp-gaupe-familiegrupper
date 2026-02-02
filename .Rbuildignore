@@ -7,10 +7,12 @@
 # R PROJECT FILES
 # TEMPORARY AND CACHE FILES
 # VERSION CONTROL
+\.gitkeep$
 ^.*\.Dockerfile$
 ^.*\.Rproj$
 ^Dockerfile$
 ^LICENSE\.md$
+^MIGRATION_STATUS\.md$
 ^README\.Rmd$
 ^README\.md$
 ^TODO\.md$
@@ -48,5 +50,3 @@
 ^renv\.lock\..*\.bak$
 ^scripts$
 ^staging$
-^MIGRATION_STATUS\.md$
-\.gitkeep$

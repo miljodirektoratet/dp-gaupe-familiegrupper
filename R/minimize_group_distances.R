@@ -45,8 +45,8 @@
 #'
 #' @export
 minimize_group_distances <- function(group_assignments,
-                                      distance_matrix,
-                                      grouping_indicator) {
+                                     distance_matrix,
+                                     grouping_indicator) {
   # Input validation
   if (!is.numeric(group_assignments) && !is.integer(group_assignments)) {
     stop("group_assignments must be a numeric or integer vector")
@@ -68,8 +68,9 @@ minimize_group_distances <- function(group_assignments,
   if (is.numeric(grouping_indicator)) {
     dim_saved <- dim(grouping_indicator)
     grouping_indicator <- matrix(as.logical(grouping_indicator),
-                                  nrow = dim_saved[1],
-                                  ncol = dim_saved[2])
+      nrow = dim_saved[1],
+      ncol = dim_saved[2]
+    )
   }
 
   # Check dimensions
