@@ -1,0 +1,241 @@
+---
+title: "Lynx Family Groups Pipeline"
+author: "Miljodirektoratet"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+---
+
+# Lynx Family Groups Analysis Pipeline
+
+This notebook walks through the spatial analysis and grouping of lynx family 
+observations, using custom clustering and interactive mapping. The main steps include:
+
+1. Loading and preparing spatial data
+2. Assigning prey categories
+3. Grouping observations into family groups using custom clustering
+4. Visualizing results interactively
+
+Tips for installing required packages:
+- If packages are not installed, add them to imports and install using:
+  ```R
+  usethis::use_package("package_name") 
+  usethis::use_package("package_name")
+  ```
+- To avoid expression limit errors, you can increase the limit using:
+  ```R
+  options(expressions = 50000)
+  ```
+- Arrow package can be difficult to install from CRAN, R-Universe provides pre-compiled 
+binaries. Refer to refer https://arrow.apache.org/docs/r/ for detailed installation instructions.
+  ```R
+  install.packages("arrow", repos = c("https://apache.r-universe.dev", "https://cloud.r-project.org"))
+  ```
+
+## 1. Setup and Load Libraries
+
+```{r setup, include=FALSE}
+# Clear workspace and load required libraries
+rm(list = ls())
+
+# Suppress package startup messages
+# suppressPackageStartupMessages({
+
+# Load libraries
+# If packages are not installed: add them to imports and install
+# usethis::use_package("package_name")
+# TIP: run this  options(expressions = 50000)
+# options(expressions = 50000)
+# install.packages("arrow", type = "binary")
+
+if (!requireNamespace("arrow", quietly = TRUE)) {
+  message(
+    "Please install 'arrow' from R-Universe for best compatibility:\n",
+    "install.packages('arrow', repos = c('https://apache.r-universe.dev', 'https://cloud.r-project.org'))"
+  )
+}
+
+# Load sf with s2 enabled
+library(s2)
+library(sf)
+sf::sf_use_s2(TRUE)
+
+# Print GEOS, GDAL, PROJ versions
+cat("GEOS version:", sf::sf_extSoftVersion()["GEOS"], "\n")
+cat("GDAL version:", sf::sf_extSoftVersion()["GDAL"], "\n")
+cat("PROJ version:", sf::sf_extSoftVersion()["PROJ"], "\n")
+
+# Dply will be used as default, when functions exist in both packages
+
+# Load required libraries in quiet mode
+libs <- c("s2", "sf", "plyr", "dplyr", "tictoc", "arrow", "leaflet", "mapview", "leaflet.extras2", "viridis", "htmlwidgets")
+invisible(lapply(libs, function(pkg) suppressPackageStartupMessages(library(pkg, character.only = TRUE))))
+
+# Detect if running in Docker container or local environment
+# Check if we're actually in the rstudio workspace directory
+if (grepl("/home/rstudio/workspace", getwd())) {
+  base_path <- "/home/rstudio/workspace"
+} else {
+  base_path <- "/home/wilaca/git/miljodirektoratet/dp-gaupe-familiegrupper"
+}
+
+# Load required libraries in quiet mode
+libs <- c("s2", "sf", "plyr", "dplyr", "tictoc", "arrow", "leaflet", "mapview", "leaflet.extras2", "viridis", "htmlwidgets")
+invisible(lapply(libs, function(pkg) suppressPackageStartupMessages(library(pkg, character.only = TRUE))))
+
+# Detect if running in Docker container or local environment
+# Check if we're actually in the rstudio workspace directory
+if (grepl("/home/rstudio/workspace", getwd())) {
+  base_path <- "/home/rstudio/workspace"
+} else {
+  base_path <- "/home/wilaca/git/miljodirektoratet/dp-gaupe-familiegrupper"
+}
+
+cat("Base path set to:", base_path, "\n")
+cat("Current working directory:", getwd(), "\n")
+
+# Load migrated package functions (order_observations, create_time_matrix, create_distance_matrix)
+devtools::load_all(file.path(base_path))
+
+# Source functions not yet migrated to package
+source(file.path(base_path, "staging/Functions/Function_GroupLynxOld_MultipleStart_Ver2.R"))
+source(file.path(base_path, "staging/Functions/Function_GroupLynxOld_Ver2.R"))
+```
+
+## 2. Load Data
+
+```{r load-data, fig.width=10, fig.height=8}
+# Load test data from gaupefam package
+data(lynx_family_test_data)
+
+# Check the data
+cat("Number of observations:", nrow(lynx_family_test_data), "\n")
+print(lynx_family_test_data)
+
+# Simple plot of test data
+par(mfrow = c(1, 2))
+
+# Plot 1: Points only
+plot(st_geometry(lynx_family_test_data),
+  pch = 19, col = "red", cex = 2,
+  main = "Observation distance (m)", axes = TRUE
+)
+text(st_coordinates(lynx_family_test_data),
+  labels = lynx_family_test_data$rovbase_id,
+  pos = 3, cex = 1
+)
+
+# Plot 2: Timeline
+plot(lynx_family_test_data$datotid_fra, 1:nrow(lynx_family_test_data),
+  pch = 19, col = "blue", cex = 2,
+  main = "Observation time (days)",
+  xlab = "Date", ylab = "Observation ID",
+  yaxt = "n"
+)
+axis(2, at = 1:nrow(lynx_family_test_data), labels = lynx_family_test_data$rovbase_id)
+segments(lynx_family_test_data$datotid_fra, 1:nrow(lynx_family_test_data),
+  lynx_family_test_data$datotid_til, 1:nrow(lynx_family_test_data),
+  col = "blue", lwd = 2
+)
+
+par(mfrow = c(1, 1))
+
+# Assign to dat for the rest of the pipeline
+dat <- lynx_family_test_data
+```
+
+## 7. Calculate Family Groups
+
+```{r calculate-groups}
+# Run main grouping function
+
+dat_ordered <- order_observations(dat, time_column = "datotid_fra")
+time_mat <- create_time_matrix(dat_ordered$datotid_fra, dat_ordered$datotid_til)
+dist_mat <- create_distance_matrix(dat_ordered$geometry)
+rule_mat <- apply_distance_rules(time_mat, dat_ordered$byttedyr)  # uses lut_distance_rules by default
+
+# fam_groups <- <your grouping logic here>
+fam_groups <- NULL  # Placeholder
+```
+
+## 8. Post-processing for Visualization
+
+```{r post-process}
+# Prepare observation points and determine best clustering
+obs_pnt <- st_as_sf(dat, coords = c("longitude", "latitude"), crs = 4326) %>%
+  st_transform(3006)
+
+which.col <- which.min(c(min(fam_groups$n.hclust), min(fam_groups$n.custom)))
+which.method <- c("h_clust", "custom")[which.col]
+which.order <- fam_groups$sorting[which.min(fam_groups[, (which.col + 1)])]
+reversed <- length(strsplit(which.order, "_")[[1]][1]) == 2
+which.order <- strsplit(which.order, "_")[[1]][1]
+
+# TODO: remove file savign from this function return dataframes instead
+my.grouped.obs <- grouplynx(
+  RovbaseID = dat$rovbase_id, activity_from = dat$datotid_fra, activity_to = dat$datotid_til,
+  geometry = dat$geometry, prey_class = dat$byttedyr, clust = which.method,
+  which.order = which.order, reversed = reversed, pretty = FALSE, crs = 3006, save_geometry = TRUE,
+  path = file.path(base_path, "output/"), obs_pnt = obs_pnt, output_name = "test_data"
+)
+```
+
+## 9. Interactive Map Visualization
+
+```{r load-results}
+# Read generated gpkg files directly (no need for parquet conversion for test)
+obs <- st_read(file.path(base_path, "output/family_group_observations_test_data.gpkg"))
+my.cent <- st_read(file.path(base_path, "output/groupings_test_data.gpkg"))
+my.lines <- st_read(file.path(base_path, "output/groupings_lines_test_data.gpkg"))
+
+# Transform to WGS84 for leaflet
+obs <- st_transform(obs, 4326)
+my.cent <- st_transform(my.cent, 4326)
+my.lines <- st_transform(my.lines, 4326)
+```
+
+
+```{r visualize-map}
+# Create interactive leaflet map
+min.lat <- min(st_coordinates(obs)[, 2]) - 0.005
+max.lat <- max(st_coordinates(obs)[, 2]) + 0.005
+min.lon <- min(st_coordinates(obs)[, 1]) - 0.005
+max.lon <- max(st_coordinates(obs)[, 1]) + 0.005
+
+my.map <- leaflet() %>%
+  addMeasure(primaryLengthUnit = "meters", primaryAreaUnit = "sqmeters") %>%
+  fitBounds(lng1 = min.lon, lng2 = max.lon, lat1 = min.lat, lat2 = max.lat) %>%
+  addProviderTiles(providers$OpenTopoMap) %>%
+  addProviderTiles("Esri.WorldImagery", group = "Esri.WorldImagery") %>%
+  addScaleBar(position = "bottomleft", options = scaleBarOptions(maxWidth = 200)) %>%
+  addCircleMarkers(
+    color = "red", opacity = 1, fillOpacity = 1,
+    labelOptions = labelOptions(
+      noHide = FALSE, direction = "top", textOnly = TRUE,
+      style = list("font-size" = "20px")
+    ),
+    label = my.cent$groupID1, radius = 4, data = my.cent
+  ) %>%
+  addCircleMarkers(
+    color = "black", opacity = 2, fillOpacity = 1,
+    labelOptions = labelOptions(
+      noHide = FALSE, direction = "top", textOnly = TRUE,
+      style = list("font-size" = "20px")
+    ),
+    label = obs$rovbase_id, radius = 1, data = obs
+  ) %>%
+  addPolylines(color = "black", opacity = 1, fillOpacity = 1, data = my.lines, weight = 3) %>%
+  addLayersControl(
+    position = "topleft",
+    options = layersControlOptions(collapsed = TRUE),
+    baseGroups = c("OpenTopoMap", "Esri.WorldImagery")
+  )
+
+my.map
+
+# Save interactive map
+saveWidget(my.map, file = file.path(base_path, "output/lynx_test_groups_map.html"))
+```
