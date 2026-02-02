@@ -4,10 +4,15 @@
 \alias{create_lines}
 \title{Create Lines from Observations to Group Centers}
 \usage{
-create_lines(data, centers, group_col = "gruppe_id", id_col = "rovbase_id")
+create_lines(
+  observations,
+  centers,
+  group_col = "gruppe_id",
+  id_col = "rovbase_id"
+)
 }
 \arguments{
-\item{data}{An sf object of observations (points).}
+\item{observations}{An sf object of observations (points).}
 
 \item{centers}{An sf object of group centers (points).}
 
@@ -22,5 +27,5 @@ An sf object of lines, each connecting an observation to its group center, with 
 Creates line geometries connecting each observation to its group center.
 }
 \details{
-The function matches each observation to its group center and creates a line between them. CRS is inherited from the input data.
+The function matches each observation to its group center and creates a line between them. CRS is inherited from the input observations.
 }
