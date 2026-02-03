@@ -19,12 +19,9 @@ Imports:
     mapproj,
     s2,
     sf,
-    plyr,
-    tictoc,
-    terra,
-    arrow,
     rlang
 Suggests:
+    arrow,
     covr,
     csdata,
     csmaps,
@@ -42,13 +39,15 @@ Suggests:
     styler,
     testthat (>= 3.0.0),
     tibble,
+    tictoc,
     usethis,
     here,
     knitr,
     leaflet,
     leaflet.extras2,
     viridis,
-    mapview
+    mapview,
+    tidyr
 Remotes:
     nx10/httpgd@v2.0.4
 Config/testthat/edition: 3
