@@ -60,17 +60,16 @@
 #' )
 #'
 #' # Check results
-#' table(grouped$group_id)  # Observations per group
+#' table(grouped$group_id) # Observations per group
 #' }
 group_lynx_families <- function(data,
-                                 clustering_method,
-                                 ordering_method = "time",
-                                 reversed = FALSE,
-                                 optimize_group_count = TRUE,
-                                 optimize_distances = TRUE,
-                                 hclust_poly = 1,
-                                 group_col = "gruppe_id") {
-
+                                clustering_method,
+                                ordering_method = "time",
+                                reversed = FALSE,
+                                optimize_group_count = TRUE,
+                                optimize_distances = TRUE,
+                                hclust_poly = 1,
+                                group_col = "gruppe_id") {
   # === Input Validation ===
   if (!inherits(data, "sf")) {
     stop("'data' must be an sf object")
@@ -137,7 +136,7 @@ group_lynx_families <- function(data,
       grouping_index = grouping_index,
       hclust_poly = hclust_poly
     )
-  } else {  # cluster_custom
+  } else { # cluster_custom
     group_assignments <- cluster_custom(
       grouping_indicator = grouping_indicator
     )

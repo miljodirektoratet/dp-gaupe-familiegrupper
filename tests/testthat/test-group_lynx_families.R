@@ -2,7 +2,8 @@ test_that("group_lynx_families returns sf object with group_id column", {
   result <- group_lynx_families(
     data = lynx_family_test_data,
     clustering_method = "cluster_custom",
-    ordering_method = "time"
+    ordering_method = "time",
+    group_col = "group_id"
   )
 
   expect_s3_class(result, "sf")
@@ -13,7 +14,8 @@ test_that("group_lynx_families returns sf object with group_id column", {
 test_that("group_lynx_families preserves input data structure", {
   result <- group_lynx_families(
     data = lynx_family_test_data,
-    clustering_method = "cluster_custom"
+    clustering_method = "cluster_custom",
+    group_col = "group_id"
   )
 
   # Should have all original columns plus group_id
@@ -78,7 +80,8 @@ test_that("group_lynx_families works with cluster_hierarchical method", {
     data = lynx_family_test_data,
     clustering_method = "cluster_hierarchical",
     ordering_method = "time",
-    hclust_poly = 1
+    hclust_poly = 1,
+    group_col = "group_id"
   )
 
   expect_s3_class(result, "sf")
@@ -93,7 +96,8 @@ test_that("group_lynx_families works with different ordering methods", {
     result <- group_lynx_families(
       data = lynx_family_test_data,
       clustering_method = "cluster_custom",
-      ordering_method = method
+      ordering_method = method,
+      group_col = "group_id"
     )
 
     expect_s3_class(result, "sf")
@@ -106,14 +110,16 @@ test_that("group_lynx_families respects reversed parameter", {
     data = lynx_family_test_data,
     clustering_method = "cluster_custom",
     ordering_method = "time",
-    reversed = FALSE
+    reversed = FALSE,
+    group_col = "group_id"
   )
 
   result_reversed <- group_lynx_families(
     data = lynx_family_test_data,
     clustering_method = "cluster_custom",
     ordering_method = "time",
-    reversed = TRUE
+    reversed = TRUE,
+    group_col = "group_id"
   )
 
   # Results should exist but may differ
@@ -127,7 +133,8 @@ test_that("group_lynx_families respects optimization parameters", {
     data = lynx_family_test_data,
     clustering_method = "cluster_custom",
     optimize_group_count = TRUE,
-    optimize_distances = TRUE
+    optimize_distances = TRUE,
+    group_col = "group_id"
   )
 
   # Without optimizations
@@ -135,7 +142,8 @@ test_that("group_lynx_families respects optimization parameters", {
     data = lynx_family_test_data,
     clustering_method = "cluster_custom",
     optimize_group_count = FALSE,
-    optimize_distances = FALSE
+    optimize_distances = FALSE,
+    group_col = "group_id"
   )
 
   expect_s3_class(result_optimized, "sf")
@@ -192,7 +200,8 @@ test_that("group_lynx_families validates hclust_poly parameter", {
 test_that("group_lynx_families assigns all observations to groups", {
   result <- group_lynx_families(
     data = lynx_family_test_data,
-    clustering_method = "cluster_custom"
+    clustering_method = "cluster_custom",
+    group_col = "group_id"
   )
 
   # No NA values in group_id

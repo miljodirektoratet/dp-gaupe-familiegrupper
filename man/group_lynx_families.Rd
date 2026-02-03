@@ -11,7 +11,8 @@ group_lynx_families(
   reversed = FALSE,
   optimize_group_count = TRUE,
   optimize_distances = TRUE,
-  hclust_poly = 1
+  hclust_poly = 1,
+  group_col = "gruppe_id"
 )
 }
 \arguments{
@@ -44,11 +45,15 @@ through iterative reassignment. Default TRUE.}
 
 \item{hclust_poly}{Numeric. Polynomial exponent for hierarchical clustering.
 Only used when clustering_method = "cluster_hierarchical". Default 1.}
+
+\item{group_col}{Character. Name of the group column to create in the output.
+Default is "gruppe_id" (Norwegian naming convention). Can be set to "group_id"
+or any custom name.}
 }
 \value{
 An sf object identical to input data with added column:
 \itemize{
-\item group_id - Integer group assignment for each observation
+\item gruppe_id (or custom name) - Integer group assignment for each observation
 }
 }
 \description{
@@ -78,6 +83,6 @@ grouped <- group_lynx_families(
 )
 
 # Check results
-table(grouped$group_id)  # Observations per group
+table(grouped$group_id) # Observations per group
 }
 }

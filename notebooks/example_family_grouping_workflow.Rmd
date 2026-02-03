@@ -47,13 +47,13 @@ pipeline approach:
 
 ```{r libraries}
 # Load required packages
-library(gaupefam)    # Our package with all family grouping functions
-library(sf)          # Spatial data handling
-library(dplyr)       # Data manipulation
-library(ggplot2)     # Plotting
-library(leaflet)     # Interactive maps
+library(gaupefam) # Our package with all family grouping functions
+library(sf) # Spatial data handling
+library(dplyr) # Data manipulation
+library(ggplot2) # Plotting
+library(leaflet) # Interactive maps
 library(htmlwidgets) # Save interactive maps
-library(viridis)     # Color palettes
+library(viridis) # Color palettes
 
 # Enable s2 for spherical geometry
 sf::sf_use_s2(TRUE)
@@ -102,12 +102,12 @@ ggplot(dat) +
 # Calculate spatial statistics
 coords <- st_coordinates(dat)
 cat("\nSpatial extent:\n")
-cat("  X range:", round(min(coords[,1])), "to", round(max(coords[,1])), "m\n")
-cat("  Y range:", round(min(coords[,2])), "to", round(max(coords[,2])), "m\n")
+cat("  X range:", round(min(coords[, 1])), "to", round(max(coords[, 1])), "m\n")
+cat("  Y range:", round(min(coords[, 2])), "to", round(max(coords[, 2])), "m\n")
 
 # Calculate pairwise distances
 dist_matrix <- st_distance(dat)
-dist_numeric <- as.numeric(dist_matrix)  # Convert units to numeric (meters)
+dist_numeric <- as.numeric(dist_matrix) # Convert units to numeric (meters)
 cat("\nPairwise distances:\n")
 cat("  Min:", round(min(dist_numeric[dist_numeric > 0])), "m\n")
 cat("  Max:", round(max(dist_numeric)), "m\n")
@@ -379,26 +379,24 @@ pal <- colorFactor(viridis(n_groups, option = "turbo"), domain = grouped_wgs84$g
 lynx_map <- leaflet() %>%
   addProviderTiles(providers$OpenTopoMap) %>%
   addProviderTiles(providers$Esri.WorldImagery, group = "Satellite") %>%
-  
   # Add connection lines
   addPolylines(
     data = lines_wgs84,
-    color = ~pal(group_id),
+    color = ~ pal(group_id),
     weight = 2,
     opacity = 0.6,
     group = "Connections"
   ) %>%
-  
   # Add observation points
   addCircleMarkers(
     data = grouped_wgs84,
-    color = ~pal(group_id),
-    fillColor = ~pal(group_id),
+    color = ~ pal(group_id),
+    fillColor = ~ pal(group_id),
     fillOpacity = 0.8,
     radius = 6,
     stroke = TRUE,
     weight = 2,
-    popup = ~paste0(
+    popup = ~ paste0(
       "<strong>Observation ID:</strong> ", rovbase_id, "<br>",
       "<strong>Group:</strong> ", group_id, "<br>",
       "<strong>Prey:</strong> ", byttedyr, "<br>",
@@ -406,24 +404,22 @@ lynx_map <- leaflet() %>%
     ),
     group = "Observations"
   ) %>%
-  
   # Add group centers
   addCircleMarkers(
     data = centers_wgs84,
     color = "black",
-    fillColor = ~pal(group_id),
+    fillColor = ~ pal(group_id),
     fillOpacity = 1,
     radius = 10,
     stroke = TRUE,
     weight = 3,
-    popup = ~paste0("<strong>Group Center</strong><br>Group ID: ", group_id),
+    popup = ~ paste0("<strong>Group Center</strong><br>Group ID: ", group_id),
     group = "Centers"
   ) %>%
-  
   # Add labels
   addLabelOnlyMarkers(
     data = grouped_wgs84,
-    label = ~as.character(rovbase_id),
+    label = ~ as.character(rovbase_id),
     labelOptions = labelOptions(
       noHide = FALSE,
       direction = "top",
@@ -432,14 +428,12 @@ lynx_map <- leaflet() %>%
     ),
     group = "Labels"
   ) %>%
-  
   # Add controls
   addLayersControl(
     baseGroups = c("OpenTopoMap", "Satellite"),
     overlayGroups = c("Observations", "Centers", "Connections", "Labels"),
     options = layersControlOptions(collapsed = FALSE)
   ) %>%
-  
   addScaleBar(position = "bottomleft") %>%
   addMeasure(primaryLengthUnit = "meters", primaryAreaUnit = "sqmeters")
 

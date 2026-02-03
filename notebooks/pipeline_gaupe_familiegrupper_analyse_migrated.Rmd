@@ -49,11 +49,11 @@ cat("Current working directory:", getwd(), "\n")
 devtools::load_all(base_path)
 
 # Load other required packages
-library(sf)          # Spatial data handling
-library(dplyr)       # Data manipulation
-library(leaflet)     # Interactive maps
+library(sf) # Spatial data handling
+library(dplyr) # Data manipulation
+library(leaflet) # Interactive maps
 library(htmlwidgets) # Save interactive maps
-library(viridis)     # Color palettes
+library(viridis) # Color palettes
 
 # Enable s2 for spherical geometry
 sf::sf_use_s2(TRUE)
@@ -179,7 +179,7 @@ grouped_lynx <- group_lynx_families(
   reversed = best_reversed,
   optimize_group_count = TRUE,
   optimize_distances = TRUE,
-  group_col = "gruppe_id"  # Norwegian naming convention
+  group_col = "gruppe_id" # Norwegian naming convention
 )
 
 # Display results
@@ -205,7 +205,7 @@ group_assignments <- grouped_lynx %>%
   select(rovbase_id, gruppe_id)
 
 # Join group assignments to "original" observations dataset for visualization
-lynx_family_observations <- lynx_family_test_data %>%  
+lynx_family_observations <- lynx_family_test_data %>%
   left_join(group_assignments, by = "rovbase_id")
 
 # Calculate group centers (centroids) based on clustered observations
@@ -220,7 +220,7 @@ print(lynx_family_group_centers)
 # Create lines connecting observations to group centers
 lynx_family_group_lines <- create_lines(
   observations = lynx_family_observations, # Observations with gruppe_id
-  centers = lynx_family_group_centers,                 # Group centroids
+  centers = lynx_family_group_centers, # Group centroids
   group_col = "gruppe_id"
 )
 
@@ -246,33 +246,30 @@ pal <- colorFactor(viridis(n_groups_final, option = "turbo"), domain = grouped_w
 lynx_map <- leaflet() %>%
   addProviderTiles(providers$OpenTopoMap) %>%
   addProviderTiles(providers$Esri.WorldImagery, group = "Satellite") %>%
-  
   # Add connection lines
   addPolylines(
     data = lines_wgs84,
-    color = ~pal(gruppe_id),
+    color = ~ pal(gruppe_id),
     weight = 3,
     opacity = 0.8
   ) %>%
-  
   # Add observation points
   addCircleMarkers(
     data = grouped_wgs84,
     color = "black",
-    fillColor = ~pal(gruppe_id),
+    fillColor = ~ pal(gruppe_id),
     fillOpacity = 0.8,
     radius = 6,
     stroke = TRUE,
     weight = 2,
-    popup = ~paste0(
+    popup = ~ paste0(
       "<strong>Observation ID:</strong> ", rovbase_id, "<br>",
       "<strong>Group:</strong> ", gruppe_id, "<br>",
       "<strong>Prey:</strong> ", byttedyr, "<br>",
       "<strong>Date:</strong> ", format(datotid_fra, "%Y-%m-%d")
     ),
-    label = ~as.character(rovbase_id)
+    label = ~ as.character(rovbase_id)
   ) %>%
-  
   # Add group centers
   addCircleMarkers(
     data = centers_wgs84,
@@ -282,16 +279,14 @@ lynx_map <- leaflet() %>%
     radius = 8,
     stroke = TRUE,
     weight = 2,
-    popup = ~paste0("<strong>Group Center</strong><br>Group ID: ", gruppe_id),
-    label = ~paste("Group", gruppe_id)
+    popup = ~ paste0("<strong>Group Center</strong><br>Group ID: ", gruppe_id),
+    label = ~ paste("Group", gruppe_id)
   ) %>%
-  
   # Add controls
   addLayersControl(
     baseGroups = c("OpenTopoMap", "Satellite"),
     options = layersControlOptions(collapsed = FALSE)
   ) %>%
-  
   addScaleBar(position = "bottomleft") %>%
   addMeasure(primaryLengthUnit = "meters", primaryAreaUnit = "sqmeters")
 

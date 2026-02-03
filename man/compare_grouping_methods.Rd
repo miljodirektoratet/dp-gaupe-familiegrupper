@@ -8,7 +8,8 @@ compare_grouping_methods(
   data,
   optimize_group_count = TRUE,
   optimize_distances = TRUE,
-  hclust_poly = 1
+  hclust_poly = 1,
+  group_col = "group_id"
 )
 }
 \arguments{
@@ -24,6 +25,9 @@ Default TRUE.}
 
 \item{hclust_poly}{Numeric. Polynomial exponent for hierarchical clustering.
 Default 1.}
+
+\item{group_col}{Character. Name of the group column to create/use.
+Default "group_id". Must match the column name used in group_lynx_families().}
 }
 \value{
 A data.frame with comparison metrics:

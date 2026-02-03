@@ -14,6 +14,8 @@
 #'   Default TRUE.
 #' @param hclust_poly Numeric. Polynomial exponent for hierarchical clustering.
 #'   Default 1.
+#' @param group_col Character. Name of the group column to create/use.
+#'   Default "group_id". Must match the column name used in group_lynx_families().
 #'
 #' @return A data.frame with comparison metrics:
 #'   \itemize{
@@ -48,10 +50,10 @@
 #' summary(comparison$n_groups_custom)
 #' }
 compare_grouping_methods <- function(data,
-                                      optimize_group_count = TRUE,
-                                      optimize_distances = TRUE,
-                                      hclust_poly = 1) {
-
+                                     optimize_group_count = TRUE,
+                                     optimize_distances = TRUE,
+                                     hclust_poly = 1,
+                                     group_col = "group_id") {
   # Input validation
   if (!inherits(data, "sf")) {
     stop("'data' must be an sf object")
@@ -84,7 +86,8 @@ compare_grouping_methods <- function(data,
       reversed = config$reversed,
       optimize_group_count = optimize_group_count,
       optimize_distances = optimize_distances,
-      hclust_poly = hclust_poly
+      hclust_poly = hclust_poly,
+      group_col = group_col
     )
 
     # Custom clustering
@@ -94,14 +97,15 @@ compare_grouping_methods <- function(data,
       ordering_method = config$method,
       reversed = config$reversed,
       optimize_group_count = optimize_group_count,
-      optimize_distances = optimize_distances
+      optimize_distances = optimize_distances,
+      group_col = group_col
     )
 
     results[[i]] <- data.frame(
       ordering_method = config$method,
       reversed = config$reversed,
-      n_groups_hierarchical = length(unique(result_h$group_id)),
-      n_groups_custom = length(unique(result_c$group_id)),
+      n_groups_hierarchical = length(unique(result_h[[group_col]])),
+      n_groups_custom = length(unique(result_c[[group_col]])),
       stringsAsFactors = FALSE
     )
   }
@@ -117,7 +121,8 @@ compare_grouping_methods <- function(data,
       reversed = FALSE,
       optimize_group_count = optimize_group_count,
       optimize_distances = optimize_distances,
-      hclust_poly = hclust_poly
+      hclust_poly = hclust_poly,
+      group_col = group_col
     )
 
     result_c <- group_lynx_families(
@@ -126,14 +131,15 @@ compare_grouping_methods <- function(data,
       ordering_method = "random",
       reversed = FALSE,
       optimize_group_count = optimize_group_count,
-      optimize_distances = optimize_distances
+      optimize_distances = optimize_distances,
+      group_col = group_col
     )
 
     results[[nrow(ordering_configs) + seed]] <- data.frame(
       ordering_method = paste0("random_seed", seed),
       reversed = FALSE,
-      n_groups_hierarchical = length(unique(result_h$group_id)),
-      n_groups_custom = length(unique(result_c$group_id)),
+      n_groups_hierarchical = length(unique(result_h[[group_col]])),
+      n_groups_custom = length(unique(result_c[[group_col]])),
       stringsAsFactors = FALSE
     )
   }
