@@ -15,6 +15,7 @@ renv::snapshot(dev = TRUE)
 # CHECK: package and functions load
 devtools::load_all()
 gaupefam::hello()
+packageVersion("gaupefam")
 
 # Check package functions have documentation
 ?gaupefam::create_distance_matrix
