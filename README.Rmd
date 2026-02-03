@@ -167,7 +167,7 @@ renv::status(dev = TRUE)
 # Load package
 devtools::load_all()
 
-# Load and test basic functionality  
+# Load and test basic functionality
 library(gaupefam)
 gaupefam::hello()
 #> 🚀 Hello from gaupefam !
@@ -310,4 +310,3 @@ This repository leverages the following tools from the R community:
 The package **dp-gaupe-familiegrupper** is released under the MIT License. See [LICENSE](LICENSE) file for details.
 
 ---
-

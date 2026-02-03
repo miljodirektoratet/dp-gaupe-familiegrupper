@@ -178,19 +178,31 @@ install the package using `devtools`:
 # Initialize renv (if not already done)
 renv::init()
 #> - The project is out-of-sync -- use `renv::status()` for details.
+```
+
+``` r
 
 # Check status with dev packages loaded
 renv::status(dev = TRUE)
 #> No issues found -- the project is in a consistent state.
+```
+
+``` r
 
 # Load package
 devtools::load_all()
 #> ℹ Loading gaupefam
+```
 
-# Load and test basic functionality  
+``` r
+
+# Load and test basic functionality
 library(gaupefam)
 gaupefam::hello()
 #> 🚀 Hello from gaupefam !
+```
+
+``` r
 #> 🚀 Hello from gaupefam !
 
 # Test plotting capabilities

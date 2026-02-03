@@ -1,0 +1,328 @@
+---
+title: "Delta Sharing Connection Example"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+## Introduction
+
+This notebook demonstrates how to connect to and use data from a Delta Share using the R `delta.sharing` library.
+
+## Load Required Libraries
+
+```{r load-libraries}
+# Note: There is no native R delta.sharing library available in CRAN
+# We'll use alternative approaches to access Delta Sharing data
+
+library(httr)      # For REST API calls
+library(jsonlite)  # For JSON handling
+library(dplyr)     # For data manipulation
+library(ggplot2)   # For plotting
+# library(reticulate) # For Python integration (if needed)
+```
+
+## Connect to Delta Share
+
+```{r connect-delta-share}
+# Read the Delta Sharing configuration
+cat("Current working directory:", getwd(), "\n")
+
+config_path <- "../config.share"
+
+# Check if file exists and read it
+if (!file.exists(config_path)) {
+  # Try absolute path if relative doesn't work
+  config_path <- "/home/rstudio/workspace/config.share"
+  cat("Trying absolute path:", config_path, "\n")
+}
+
+cat("Using config file:", config_path, "\n")
+cat("File exists:", file.exists(config_path), "\n")
+
+# Read and parse the config file
+config <- jsonlite::fromJSON(config_path)
+
+# Extract connection details
+endpoint <- config$endpoint
+bearer_token <- config$bearerToken
+
+cat("Endpoint from config:", endpoint, "\n")
+
+# Create base URL for Delta Sharing REST API
+# The endpoint already contains the full API path including metastore ID
+api_base <- endpoint
+
+cat("Connected to Delta Share\n")
+cat("API base URL:", api_base, "\n")
+```
+
+## Helper Function for API Calls
+
+```{r api-helper}
+# Function to make authenticated API calls to Delta Sharing
+delta_sharing_api_call <- function(url_path, method = "GET") {
+  # The endpoint already includes the metastore path, so we build from there
+  full_url <- paste0(api_base, url_path)
+
+  cat("Making API call to:", full_url, "\n")
+
+  response <- httr::GET(
+    url = full_url,
+    httr::add_headers(
+      "Authorization" = paste("Bearer", bearer_token),
+      "Content-Type" = "application/json"
+    )
+  )
+
+  if (httr::status_code(response) == 200) {
+    content <- httr::content(response, "text", encoding = "UTF-8")
+    return(jsonlite::fromJSON(content))
+  } else {
+    cat("API call failed with status:", httr::status_code(response), "\n")
+    cat("Response:", httr::content(response, "text"), "\n")
+    return(NULL)
+  }
+}
+```
+
+## List Available Shares
+
+```{r list-shares}
+# List all available shares using REST API
+shares_result <- delta_sharing_api_call("/shares")
+
+if (!is.null(shares_result)) {
+  cat("Shares result structure:\n")
+  str(shares_result)
+
+  # Handle different possible response structures
+  if ("items" %in% names(shares_result)) {
+    shares <- shares_result$items
+  } else {
+    shares <- shares_result
+  }
+
+  cat("Available shares:\n")
+  if (nrow(shares) > 0) {
+    # Shares is a data frame
+    for (i in 1:nrow(shares)) {
+      cat(paste0(i, ". ", shares$name[i], " (ID: ", shares$id[i], ")\n"))
+    }
+  } else {
+    cat("No shares available\n")
+  }
+} else {
+  cat("Failed to retrieve shares\n")
+}
+```
+
+## List Schemas in a Share
+
+```{r list-schemas}
+# If shares are available, list schemas in the first share
+if (exists("shares") && nrow(shares) > 0) {
+  share_name <- shares$name[1]
+  cat("Listing schemas in share:", share_name, "\n")
+
+  schemas_result <- delta_sharing_api_call(paste0("/shares/", share_name, "/schemas"))
+
+  if (!is.null(schemas_result)) {
+    if ("items" %in% names(schemas_result)) {
+      schemas <- schemas_result$items
+    } else {
+      schemas <- schemas_result
+    }
+
+    cat("Available schemas:\n")
+    if (nrow(schemas) > 0) {
+      for (i in 1:nrow(schemas)) {
+        cat(paste0(i, ". ", schemas$name[i], "\n"))
+      }
+    } else {
+      cat("No schemas available\n")
+    }
+  }
+} else {
+  cat("No shares available\n")
+}
+```
+
+## List Tables in a Schema
+
+```{r list-tables}
+# If schemas are available, list tables in the first schema
+if (exists("schemas") && nrow(schemas) > 0) {
+  schema_name <- schemas$name[1]
+  cat("Listing tables in schema:", schema_name, "\n")
+
+  tables_result <- delta_sharing_api_call(paste0("/shares/", share_name, "/schemas/", schema_name, "/tables"))
+
+  if (!is.null(tables_result)) {
+    if ("items" %in% names(tables_result)) {
+      tables <- tables_result$items
+    } else {
+      tables <- tables_result
+    }
+
+    cat("Available tables:\n")
+    if (nrow(tables) > 0) {
+      for (i in 1:nrow(tables)) {
+        cat(paste0(i, ". ", tables$name[i], "\n"))
+      }
+    } else {
+      cat("No tables available\n")
+    }
+  }
+} else {
+  cat("No schemas available\n")
+}
+```
+
+## Load Table Data
+
+```{r load-data}
+# Method 1: Using Python delta-sharing library through reticulate
+if (exists("tables") && nrow(tables) > 0) {
+  table_name <- tables$name[1]
+  cat("Table name:", table_name, "\n")
+
+  # For now, we'll show how to get table metadata
+  # Getting actual data requires the Python delta-sharing library
+  table_info_result <- delta_sharing_api_call(
+    paste0("/shares/", share_name, "/schemas/", schema_name, "/tables/", table_name)
+  )
+
+  if (!is.null(table_info_result)) {
+    cat("Table information:\n")
+    cat("Name:", table_info_result$name, "\n")
+    cat("Share:", table_info_result$share, "\n")
+    cat("Schema:", table_info_result$schema, "\n")
+  }
+} else {
+  cat("No tables available\n")
+}
+```
+
+## Alternative: Using Python delta-sharing via reticulate
+
+```{r python-delta-sharing}
+# First install Python dependencies (run once)
+# reticulate::py_install("delta-sharing")
+
+# Example of using Python delta-sharing library from R
+# Uncomment the following lines to use this approach:
+
+# # Configure Python environment
+# reticulate::use_python("/usr/bin/python3", required = TRUE)
+#
+# # Import delta-sharing
+# delta_sharing <- reticulate::import("delta_sharing")
+#
+# # Create sharing client
+# client <- delta_sharing$SharingClient(config_path)
+#
+# # List shares
+# shares_py <- client$list_shares()
+# print(shares_py)
+#
+# # If you have a specific table URL, load it:
+# # table_url <- "share.schema.table"
+# # df_pandas <- delta_sharing$load_as_pandas(table_url, client)
+# # df_r <- reticulate::py_to_r(df_pandas)
+```
+
+## Alternative: Load Data Directly with Table URL
+
+```{r load-direct}
+# Method using direct REST API call to get table files
+# Note: This gets metadata, actual data download requires additional steps
+
+if (exists("table_name") && exists("share_name") && exists("schema_name")) {
+  # Get table files/metadata
+  table_files_result <- delta_sharing_api_call(
+    paste0("/shares/", share_name, "/schemas/", schema_name, "/tables/", table_name, "/query"),
+    method = "POST"
+  )
+
+  if (!is.null(table_files_result)) {
+    cat("Table files information available\n")
+    # This would contain Parquet file URLs that can be downloaded
+    # For production use, you'd download and read these Parquet files
+  }
+}
+
+# Example for when you know the specific table coordinates:
+# table_coordinates <- "your_share.your_schema.your_table"
+# cat("To load data for table:", table_coordinates, "\n")
+```
+
+## Data Exploration Example
+
+```{r data-exploration}
+# Since we're working with API calls rather than direct data loading,
+# this section shows how to work with data once you have it
+
+# Example: If you've successfully loaded data into df_r from Python
+# if (exists("df_r") && nrow(df_r) > 0) {
+#   cat("Dataset Summary:\n")
+#   summary(df_r)
+#
+#   # Create visualizations
+#   numeric_cols <- sapply(df_r, is.numeric)
+#   if (any(numeric_cols)) {
+#     numeric_col <- names(df_r)[which(numeric_cols)[1]]
+#
+#     p <- ggplot(df_r, aes_string(x = numeric_col)) +
+#       geom_histogram(bins = 30, fill = "steelblue", alpha = 0.7) +
+#       labs(title = paste("Distribution of", numeric_col)) +
+#       theme_minimal()
+#     print(p)
+#   }
+# }
+
+cat("Data exploration will be available once data is loaded\n")
+```
+
+## Configuration Details
+
+```{r config-info}
+# Display configuration details (without sensitive information)
+cat("Configuration file path:", config_path, "\n")
+cat("Configuration exists:", file.exists(config_path), "\n")
+
+if (file.exists(config_path)) {
+  config <- jsonlite::fromJSON(config_path)
+  cat("Endpoint:", config$endpoint, "\n")
+  cat("Credentials version:", config$shareCredentialsVersion, "\n")
+  cat("Token expires:", config$expirationTime, "\n")
+}
+```
+
+## Notes
+
+**Important:** There is no native R package for Delta Sharing available in CRAN. This notebook provides two main approaches:
+
+1. **REST API Approach**: Uses the Delta Sharing REST API directly to browse shares, schemas, and tables
+2. **Python Integration**: Uses `reticulate` to call the Python `delta-sharing` library from R
+
+### To use the Python approach:
+
+1. Install the Python delta-sharing package:
+```r
+reticulate::py_install("delta-sharing")
+```
+
+2. Uncomment and run the Python integration code above
+
+### Configuration Details:
+- Configuration file contains authentication credentials
+- Your configuration expires on: 2025-11-12T11:46:45.076Z (tomorrow!)
+- You'll need to refresh your credentials before they expire
+
+### For production use:
+- Consider setting up a Python environment with delta-sharing
+- Use `reticulate` to bridge between R and Python
+- Or implement a complete REST API client for your specific needs

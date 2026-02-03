@@ -1,0 +1,19 @@
+# Raster data
+*.tif
+*.tif.aux.xml
+
+# Vector data
+*.shp
+*.prj
+*.shx
+*.dbf
+
+# R data
+*.rds
+
+# Office
+*.docx
+*.pdf
+
+# folders
+test-wilaca/

@@ -19,9 +19,9 @@ Imports:
     mapproj,
     s2,
     sf,
-    plyr,
-    tictoc
+    rlang
 Suggests:
+    arrow,
     covr,
     csdata,
     csmaps,
@@ -34,14 +34,20 @@ Suggests:
     pkgdown,
     purrr,
     renv,
-    roxygen2,
+    roxygen2 (>= 7.3.3),
     stringr,
     styler,
     testthat (>= 3.0.0),
     tibble,
+    tictoc,
     usethis,
     here,
-    knitr
+    knitr,
+    leaflet,
+    leaflet.extras2,
+    viridis,
+    mapview,
+    tidyr
 Remotes:
     nx10/httpgd@v2.0.4
 Config/testthat/edition: 3

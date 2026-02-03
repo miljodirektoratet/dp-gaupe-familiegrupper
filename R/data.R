@@ -1,3 +1,17 @@
+#' Distance Rules Lookup Table
+#'
+#' A data frame of spatial distance thresholds for all combinations of prey
+#' classes and days, used for grouping and clustering.
+#'
+#' @format A data frame with columns:
+#' \describe{
+#'   \item{prey_class1}{Prey class 1 (character)}
+#'   \item{prey_class2}{Prey class 2 (character)}
+#'   \item{temporal_distance_days}{Number of days (integer)}
+#'   \item{distance_threshold_m}{Distance threshold in meters (numeric)}
+#' }
+#' @source Generated from legacy rules in data-raw/lut_distance_rules.R
+"lut_distance_rules"
 # Dataset documentation
 
 #' Dataset | Norway County Map Data (2024 borders)
@@ -53,3 +67,41 @@
 #' Data accessed on 2025-09-23
 #'
 "no_county_names_2024"
+
+#' Dataset | Lynx Test Data
+#'
+#' A small synthetic dataset of lynx family observations for testing clustering functions.
+#' Contains 7 observations with spatial locations, temporal data, and prey categories.
+#' 3 observations are from Bymarka, Trondheim and 4 from Nordmarka, Oslo.
+#'
+#' @format An sf object with 7 rows and 5 columns:
+#' \describe{
+#'   \item{rovbase_id}{Unique observation identifier (1-5)}
+#'   \item{datotid_fra}{Start datetime of activity period (POSIXct, UTC)}
+#'   \item{datotid_til}{End datetime of activity period (POSIXct, UTC)}
+#'   \item{byttedyr}{Prey biomass category: "High_biomass", "Low_biomass", or "Northern_reindeer"}
+#'   \item{geometry}{Point geometry (POINT) in WGS84 (EPSG:4326), locations in southern Norway}
+#' }
+#'
+#' @details
+#' This test dataset spans:
+#' \itemize{
+#'   \item Temporal range: 2026-01-01 to 2026-01-16 (16 days)
+#'   \item Spatial range: Approximately 250 km north-south extent
+#'   \item Observations include varying temporal and spatial separations
+#'   \item Designed to test ordering, distance calculations, and clustering algorithms
+#' }
+#'
+#' @examples
+#' \dontrun{
+#' # Load test data
+#' data(lynx_family_test_data)
+#'
+#' # Test ordering functions
+#' ordered <- order_observations(lynx_family_test_data, which_order = "time")
+#'
+#' # Test matrix creation
+#' time_mat <- create_time_matrix(lynx_family_test_data$datotid_fra, lynx_family_test_data$datotid_til)
+#' dist_mat <- create_distance_matrix(lynx_family_test_data$geometry)
+#' }
+"lynx_family_test_data"

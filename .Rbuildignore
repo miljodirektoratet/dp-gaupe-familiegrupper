@@ -7,9 +7,12 @@
 # R PROJECT FILES
 # TEMPORARY AND CACHE FILES
 # VERSION CONTROL
+\.gitkeep$
 ^.*\.Dockerfile$
 ^.*\.Rproj$
+^Dockerfile$
 ^LICENSE\.md$
+^MIGRATION_STATUS\.md$
 ^README\.Rmd$
 ^README\.md$
 ^TODO\.md$
@@ -20,6 +23,7 @@
 ^\.Rprofile$
 ^\.Rproj\.user$
 ^\.Ruserdata$
+^\.devcontainer
 ^\.devcontainers$
 ^\.dockerignore$
 ^\.git$
@@ -34,10 +38,15 @@
 ^compose\.yml$
 ^container-setup\.md$
 ^data-raw$
+^data/.*\.gitkeep$
+^data/delta-share-download$
+^docs$
 ^dump$
 ^logs$
 ^notebooks$
+^output$
 ^renv$
 ^renv\.lock$
 ^renv\.lock\..*\.bak$
 ^scripts$
+^staging$

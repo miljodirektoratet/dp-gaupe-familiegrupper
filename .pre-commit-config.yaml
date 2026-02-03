@@ -55,6 +55,12 @@ repos:
         -    csdata
         -    scico
         -    mapproj
+        -    s2
+        -    sf
+        -    plyr
+        -    tictoc
+        -    terra
+        -    arrow
     -   id: use-tidy-description
     -   id: readme-rmd-rendered
     -   id: parsable-R
@@ -87,7 +93,8 @@ repos:
           renv/activate.R|
           vignettes/FAQ\.Rmd|
           scripts/.*|
-          dump/.*
+          dump/.*|
+          data-raw/.*
           )$
     # -   id: pkgdown
 
