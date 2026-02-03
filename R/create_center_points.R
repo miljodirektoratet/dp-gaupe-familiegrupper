@@ -1,11 +1,16 @@
 #' Create Center Points for Grouped Observations
 #'
-#' Computes the centroid (mean X and Y coordinates) for each group in a spatial dataset and returns them as an sf object.
+#' Computes the centroid (mean X and Y coordinates) for each group in a
+#' spatial dataset and returns them as an sf object.
 #'
 #' @param data An sf object with a geometry column and a grouping column.
-#' @param group_col The name of the grouping column (as a string or unquoted symbol). Default is "gruppe_id".
-#' @return An sf object with one centroid point per group, using the same CRS as the input.
-#' @details The function calculates the centroid of each group by averaging the centroid coordinates of all observations in that group. The output CRS is set to match the input data.
+#' @param group_col The name of the grouping column (as a string or unquoted
+#'   symbol). Default is "gruppe_id".
+#' @return An sf object with one centroid point per group, using the same CRS
+#'   as the input.
+#' @details The function calculates the centroid of each group by averaging
+#'   the centroid coordinates of all observations in that group. The output
+#'   CRS is set to match the input data.
 #' @importFrom sf st_coordinates st_centroid st_as_sf st_crs
 #' @importFrom dplyr group_by summarise ungroup
 #' @importFrom rlang enquo as_name
@@ -39,5 +44,5 @@ create_center_points <- function(data, group_col = "gruppe_id") {
     crs = sf::st_crs(data)
   )
 
-  return(group_centers_sf)
+  group_centers_sf
 }

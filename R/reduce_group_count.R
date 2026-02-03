@@ -148,7 +148,9 @@ reduce_group_count <- function(group_assignments,
       }
 
       # Remove self-assignments (current group ID)
-      alternative_candidates <- alternative_candidates[alternative_candidates$currentID != alternative_candidates$altID, ]
+      alternative_candidates <- alternative_candidates[
+        alternative_candidates$currentID != alternative_candidates$altID,
+      ]
       if (nrow(alternative_candidates) == 0) {
         next
       }
@@ -162,7 +164,8 @@ reduce_group_count <- function(group_assignments,
 
       # Check if all observations in current group can be reassigned
       accepted_obs <- unique(alternative_candidates[, c("ind", "currentID")])
-      accepted_obs$accept <- accepted_obs$ind %in% alternative_candidates$ind[alternative_candidates$accept]
+      accepted_obs$accept <- accepted_obs$ind %in%
+        alternative_candidates$ind[alternative_candidates$accept]
 
       # Only proceed if all observations can be reassigned
       if (!all(accepted_obs$accept) || !all(obs_in_group %in% accepted_obs$ind)) {
@@ -170,7 +173,10 @@ reduce_group_count <- function(group_assignments,
       }
 
       # Filter to accepted alternatives
-      alternative_candidates <- alternative_candidates[alternative_candidates$accept, c("ind", "currentID", "altID", "accept")]
+      alternative_candidates <- alternative_candidates[
+        alternative_candidates$accept,
+        c("ind", "currentID", "altID", "accept")
+      ]
       alternative_candidates <- unique(alternative_candidates)
 
       # For observations with multiple alternatives, choose best based on distance
@@ -227,5 +233,5 @@ reduce_group_count <- function(group_assignments,
     group_counts <- c(group_counts, length(unique(group_assignments)))
   }
 
-  return(group_assignments)
+  group_assignments
 }

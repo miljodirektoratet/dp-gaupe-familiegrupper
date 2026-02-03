@@ -67,5 +67,5 @@ create_distance_matrix <- function(geometry) {
     stop("Distance matrix is not symmetric. Check the input data.")
   }
 
-  return(distance_matrix)
+  distance_matrix
 }

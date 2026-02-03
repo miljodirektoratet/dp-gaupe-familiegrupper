@@ -67,5 +67,5 @@ cluster_hierarchical <- function(grouping_index,
   # Cut dendrogram at specified height
   cluster_assignments <- stats::cutree(hclust_result, h = cut_height)
 
-  return(cluster_assignments)
+  cluster_assignments
 }

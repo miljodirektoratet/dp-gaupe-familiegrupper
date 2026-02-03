@@ -94,5 +94,5 @@ create_time_matrix <- function(activity_from, activity_to) {
     stop("Time matrix is not symmetric. Check the input data.")
   }
 
-  return(time_matrix)
+  time_matrix
 }

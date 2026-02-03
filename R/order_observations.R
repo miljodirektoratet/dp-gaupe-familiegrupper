@@ -119,5 +119,5 @@ order_observations <- function(data,
     rownames(data) <- seq_len(nrow(data))
   }
 
-  return(data)
+  data
 }

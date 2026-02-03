@@ -75,7 +75,7 @@ compare_grouping_methods <- function(data,
   results <- list()
 
   # Test standard orderings (forward and reverse)
-  for (i in 1:nrow(ordering_configs)) {
+  for (i in seq_len(nrow(ordering_configs))) {
     config <- ordering_configs[i, ]
 
     # Hierarchical clustering
@@ -148,5 +148,5 @@ compare_grouping_methods <- function(data,
   comparison <- do.call(rbind, results)
   rownames(comparison) <- NULL
 
-  return(comparison)
+  comparison
 }

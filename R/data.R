@@ -1,6 +1,7 @@
 #' Distance Rules Lookup Table
 #'
-#' A data frame of spatial distance thresholds for all combinations of prey classes and days, used for grouping and clustering.
+#' A data frame of spatial distance thresholds for all combinations of prey
+#' classes and days, used for grouping and clustering.
 #'
 #' @format A data frame with columns:
 #' \describe{

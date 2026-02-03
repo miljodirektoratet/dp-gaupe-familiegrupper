@@ -21,16 +21,7 @@ This notebook demonstrates how to use the native R `delta.sharing` package from 
 # Method 1: Standard installation
 remotes::install_github("zacdav-db/delta-sharing-r")
 
-# Method 2: If you encounter C stack issues (common in containers)
-# First install dependencies separately:
-# install.packages(c("bit", "hms", "bit64", "assertthat", "progress"))
-# Sys.setenv("LIBARROW_MINIMAL" = "false")
-# install.packages("arrow")
 
-# Then install the main package:
-# options(expressions = 500000)
-# Sys.setenv("R_C_STACK_LIMIT" = "2147483647")
-# remotes::install_github("zacdav-db/delta-sharing-r")
 ```
 
 ## Check Installation

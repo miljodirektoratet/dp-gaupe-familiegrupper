@@ -157,5 +157,5 @@ minimize_group_distances <- function(group_assignments,
     assignment_history <- cbind(assignment_history, id = group_assignments)
   }
 
-  return(group_assignments)
+  group_assignments
 }

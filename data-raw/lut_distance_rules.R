@@ -28,8 +28,14 @@ for (i in seq_len(nrow(lut_distance_rules))) {
   prey_class1 <- lut_distance_rules$prey_class1[i]
   prey_class2 <- lut_distance_rules$prey_class2[i]
   lut_distance_rules$distance_threshold_m[i] <- mean(c(
-    dist_rules$distance_threshold_m[dist_rules$temporal_distance_days == temporal_distance_days & dist_rules$prey == prey_class1],
-    dist_rules$distance_threshold_m[dist_rules$temporal_distance_days == temporal_distance_days & dist_rules$prey == prey_class2]
+    dist_rules$distance_threshold_m[
+      dist_rules$temporal_distance_days == temporal_distance_days &
+        dist_rules$prey == prey_class1
+    ],
+    dist_rules$distance_threshold_m[
+      dist_rules$temporal_distance_days == temporal_distance_days &
+        dist_rules$prey == prey_class2
+    ]
   ))
 }
 lut_distance_rules$distance_threshold_m <- lut_distance_rules$distance_threshold_m * 1000

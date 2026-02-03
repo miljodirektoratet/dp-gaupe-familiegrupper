@@ -107,5 +107,5 @@ cluster_custom <- function(grouping_indicator) {
     }
   }
 
-  return(group_assignments)
+  group_assignments
 }

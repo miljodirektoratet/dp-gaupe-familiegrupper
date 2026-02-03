@@ -31,7 +31,7 @@ generate_county_colors <- function(names_df, palette_name = "batlow") {
     ),
     nm = names_df$location_name
   )
-  return(county_colors)
+  county_colors
 }
 
 #' Function | plot_norway_counties
@@ -83,7 +83,7 @@ plot_norway_counties <- function(
         color = "transparent"
       )
     )
-  return(map_plot)
+  map_plot
 }
 
 #' Function | plot_trondelag

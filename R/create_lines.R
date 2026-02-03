@@ -4,10 +4,14 @@
 #'
 #' @param observations An sf object of observations (points).
 #' @param centers An sf object of group centers (points).
-#' @param group_col The name of the grouping column (string). Default is "gruppe_id".
-#' @param id_col The name of the observation ID column (string). Default is "rovbase_id".
-#' @return An sf object of lines, each connecting an observation to its group center, with the observation ID as an attribute.
-#' @details The function matches each observation to its group center and creates a line between them. CRS is inherited from the input observations.
+#' @param group_col The name of the grouping column (string). Default is
+#'   "gruppe_id".
+#' @param id_col The name of the observation ID column (string). Default is
+#'   "rovbase_id".
+#' @return An sf object of lines, each connecting an observation to its group
+#'   center, with the observation ID as an attribute.
+#' @details The function matches each observation to its group center and
+#'   creates a line between them. CRS is inherited from the input observations.
 #' @importFrom sf st_coordinates st_linestring st_sfc st_sf st_crs
 #' @importFrom dplyr left_join
 #' @export
@@ -54,5 +58,5 @@ create_lines <- function(observations, centers, group_col = "gruppe_id", id_col 
     id = merged[[id_col]]
   )
   names(lines_sf)[names(lines_sf) == "id"] <- id_col
-  return(lines_sf)
+  lines_sf
 }

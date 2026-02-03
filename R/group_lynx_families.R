@@ -163,5 +163,5 @@ group_lynx_families <- function(data,
   # === Return Enriched Data ===
   data_ordered[[group_col]] <- group_assignments
 
-  return(data_ordered)
+  data_ordered
 }
