@@ -20,8 +20,6 @@ This notebook demonstrates how to use the native R `delta.sharing` package from 
 
 # Method 1: Standard installation
 remotes::install_github("zacdav-db/delta-sharing-r")
-
-
 ```
 
 ## Check Installation

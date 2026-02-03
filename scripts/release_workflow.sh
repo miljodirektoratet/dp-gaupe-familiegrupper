@@ -1,7 +1,7 @@
 #!/bin/bash
 # Release Workflow for gaupefam R package
 # Usage: ./scripts/release_workflow.sh
-# 
+#
 # This script automates the release process:
 # 1. Validates you're on main branch with no uncommitted changes
 # 2. Prompts for new version number (semantic versioning: X.Y.Z)

@@ -27,11 +27,15 @@ apply_distance_rules <- function(time_matrix, prey_class, dist_rules = NULL, max
   # Input validation
   if (!is.matrix(time_matrix)) stop("time_matrix must be a matrix.")
   if (length(prey_class) != nrow(time_matrix)) stop("prey_class length must match time_matrix dimensions.")
-  required_cols <- c("prey_class1", "prey_class2",
-                     "temporal_distance_days", "distance_threshold_m")
+  required_cols <- c(
+    "prey_class1", "prey_class2",
+    "temporal_distance_days", "distance_threshold_m"
+  )
   if (!all(required_cols %in% names(dist_rules))) {
-    stop("dist_rules must have columns: prey_class1, prey_class2, ",
-         "temporal_distance_days, distance_threshold_m")
+    stop(
+      "dist_rules must have columns: prey_class1, prey_class2, ",
+      "temporal_distance_days, distance_threshold_m"
+    )
   }
 
   n <- nrow(time_matrix)
