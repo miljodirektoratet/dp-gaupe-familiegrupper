@@ -54,6 +54,7 @@ library(dplyr) # Data manipulation
 library(leaflet) # Interactive maps
 library(htmlwidgets) # Save interactive maps
 library(viridis) # Color palettes
+library(arrow) # For reading Parquet files
 
 # Enable s2 for spherical geometry
 sf::sf_use_s2(TRUE)
@@ -66,17 +67,80 @@ cat("PROJ version:", sf::sf_extSoftVersion()["PROJ"], "\n")
 
 ## 2. Load and Explore Data
 
-```{r load-data, fig.width=10, fig.height=8}
-# Load test data from gaupefam package
-data(lynx_family_test_data)
 
-# Assign to shorter variable name
-dat <- lynx_family_test_data
+
+```{r load-data}
+# Read spatial datasets
+date <- "20260204"
+time <- "150247"
+
+docker_data_path <- "/home/rstudio/workspace/dump/hidden/data/"
+linux_data_path <- "/home/wilaca/git/miljodirektoratet/dp-gaupe-familiegrupper/dump/hidden/data/"
+
+data_base_path <- if (grepl("/home/rstudio/workspace", getwd())) {
+  docker_data_path
+} else {
+  linux_data_path
+}
+
+dat_pnt <- read_parquet(paste0(data_base_path, date, "/input/gaupegruppering_rovviltobservasjon_pkt_", date, "_", time, ".parquet"))
+dat_spor <- read_parquet(paste0(data_base_path, date, "/input/gaupegruppering_rovviltobservasjon_spor_lin_", date, "_", time, ".parquet"))
+dat_spor_pnt <- read_parquet(paste0(data_base_path, date, "/input/gaupegruppering_rovviltobservasjon_spor_pkt_", date, "_", time, ".parquet"))
+dod <- read_parquet(paste0(data_base_path, date, "/input/gaupegruppering_doede_rovdyr_pkt_", date, "_", time, ".parquet"))
+
+# Grouping data
+datagrunnlag <- read_parquet(paste0(data_base_path, date, "/input/gaupe_familiegrupper_datagrunnlag_pkt_", date, "_", time, ".parquet"))
+
+# Prey data (different location)
+prey_base_path <- if (grepl("/home/rstudio/workspace", getwd())) {
+  "/home/rstudio/workspace/dump/hidden/data/"
+} else {
+  "/home/wilaca/git/miljodirektoratet/dp-gaupe-familiegrupper/dump/hidden/data/"
+}
+prey <- st_read(paste0(prey_base_path, "byttedyrkategori_shp/byttedyrkategori_skandinavia_tettede_hull.shp"))
+```
+
+```{r inspect-observations-data, fig.width=10, fig.height=8}
+# Observations data
+# Observasjoner: original observations as POINT geometries.
+# Dead animals (dod) and observasjoner (dat_pnt), observations include both syns- and sporobservasjoner.
+# Sporobservasjoner are represented as points.
+# Convert to sf objects first
+dat_pnt_sf <- st_as_sf(dat_pnt)
+dod_sf <- st_as_sf(dod)
+
+obs_pnt <- bind_rows(dat_pnt_sf, dod_sf)
+obs_pnt <- obs_pnt %>% st_cast("POINT")
+
+# Ensure CRS is set (use same as dat which will be loaded later, or set explicitly)
+if (is.na(st_crs(obs_pnt))) {
+  # Assuming Norwegian projection (EPSG:25833 - ETRS89 / UTM zone 33N)
+  obs_pnt <- st_set_crs(obs_pnt, 25833)
+}
+
+# Print unique count of rovbase_id
+unique_rovbase_ids <- length(unique(obs_pnt$rovbase_id))
+cat("Unique rovbase_id:", unique_rovbase_ids, "\n")
+
+head(obs_pnt, 2)
+```
+
+```{r inspect-datagrunnlag, fig.width=10, fig.height=8}
+# Datagrunnlag = input for grouping analysis
+dat <- st_as_sf(datagrunnlag)
+
+# Print unique count of rovbase_id
+unique_rovbase_ids <- length(unique(dat$rovbase_id))
+cat("Unique rovbase_id:", unique_rovbase_ids, "\n")
+
+head(dat, 2)
 
 # Check the data
 cat("Number of observations:", nrow(dat), "\n")
 print(dat)
+```
 
+```````{r plot-data, fig.width=10, fig.height=8}
 # Simple plot of test data
 par(mfrow = c(1, 2))
 
@@ -84,10 +148,6 @@ par(mfrow = c(1, 2))
 plot(st_geometry(dat),
   pch = 19, col = "red", cex = 2,
   main = "Spatial Distribution", axes = TRUE
-)
-text(st_coordinates(dat),
-  labels = dat$rovbase_id,
-  pos = 3, cex = 1
 )
 
 # Plot 2: Temporal distribution
@@ -106,86 +166,93 @@ segments(dat$datotid_fra, 1:nrow(dat),
 par(mfrow = c(1, 1))
 ```
 
-## 3. Compare Grouping Methods (Sensitivity Analysis)
-
-```{r compare-methods}
-# Test 30 different configurations to find optimal grouping:
-# - 2 clustering methods (hierarchical, custom)
-# - 15 ordering strategies (time, pca1, pca2, north-south, east-west × forward/reverse + 5 random)
-
-cat("Running sensitivity analysis (30 configurations)...\n\n")
-
-comparison <- compare_grouping_methods(
-  data = dat,
-  optimize_group_count = TRUE,
-  optimize_distances = TRUE
-)
-
-# Display results
-print(comparison)
-
-# Summary statistics
-cat("\nHierarchical clustering:\n")
-cat("  Min groups:", min(comparison$n_groups_hierarchical), "\n")
-cat("  Max groups:", max(comparison$n_groups_hierarchical), "\n")
-cat("  Mean groups:", round(mean(comparison$n_groups_hierarchical), 2), "\n\n")
-
-cat("Custom clustering:\n")
-cat("  Min groups:", min(comparison$n_groups_custom), "\n")
-cat("  Max groups:", max(comparison$n_groups_custom), "\n")
-cat("  Mean groups:", round(mean(comparison$n_groups_custom), 2), "\n\n")
-
-# Find best configurations
-best_hierarchical <- comparison[which.min(comparison$n_groups_hierarchical), ]
-cat("Best hierarchical configuration:\n")
-cat("  Method:", best_hierarchical$ordering_method, "\n")
-cat("  Reversed:", best_hierarchical$reversed, "\n")
-cat("  Groups:", best_hierarchical$n_groups_hierarchical, "\n\n")
-
-best_custom <- comparison[which.min(comparison$n_groups_custom), ]
-cat("Best custom configuration:\n")
-cat("  Method:", best_custom$ordering_method, "\n")
-cat("  Reversed:", best_custom$reversed, "\n")
-cat("  Groups:", best_custom$n_groups_custom, "\n")
-```
-
-## 4. Group Observations with Best Configuration
+## 3. Group Observations (Automatic Configuration Selection)
 
 ```{r group-observations}
-# Determine best overall configuration
-if (best_hierarchical$n_groups_hierarchical < best_custom$n_groups_custom) {
-  best_method <- "cluster_hierarchical"
-  best_ordering <- best_hierarchical$ordering_method
-  best_reversed <- best_hierarchical$reversed
-  n_groups <- best_hierarchical$n_groups_hierarchical
-} else {
-  best_method <- "cluster_custom"
-  best_ordering <- best_custom$ordering_method
-  best_reversed <- best_custom$reversed
-  n_groups <- best_custom$n_groups_custom
-}
+# cat("Running analysis to find optimal configuration...\n\n")
 
-cat("Using best configuration:\n")
-cat("  Clustering method:", best_method, "\n")
-cat("  Ordering method:", best_ordering, "\n")
-cat("  Reversed:", best_reversed, "\n")
-cat("  Expected groups:", n_groups, "\n\n")
+# # Compare methods and automatically select best
+# # To test only one clustering method (faster), use clustering_methods = "custom" or "hierarchical"
+# comparison <- compare_grouping_methods(
+#   data = dat,
+#   clustering_methods = "hierarchical", # Options: "both", "hierarchical", "custom", or c("hierarchical", "custom")
+#   optimize_group_count = FALSE, # Reducing total groups is time-consuming, only apply for final config
+#   optimize_distances = FALSE, # Minize distances (make group more compact) is time-consuming, only apply for final config
+#   parallel = TRUE,
+#   verbose = TRUE # Print progress after each config
+# )
+
+```
+
+```{r print-comparison-summary}
+# # View full results table
+# print(comparison)
+
+# # Find overall best (fewest groups across both methods)
+# min_h <- min(comparison$n_groups_hierarchical)
+# min_c <- min(comparison$n_groups_custom)
+
+# if (min_h < min_c) {
+#   cat("Winner: Hierarchical with", min_h, "groups\n")
+#   best <- comparison[which.min(comparison$n_groups_hierarchical), ]
+# } else {
+#   cat("Winner: Custom with", min_c, "groups\n")
+#   best <- comparison[which.min(comparison$n_groups_custom), ]
+# }
+# print(best)
+
+# # Compare averages (consistency check)
+# cat("\nAverage groups:\n")
+# cat("  Hierarchical:", mean(comparison$n_groups_hierarchical), "\n")
+# cat("  Custom:", mean(comparison$n_groups_custom), "\n")
+
+# # Speed comparison
+# cat("\nAverage time:\n")
+# cat("  Hierarchical:", mean(comparison$time_hierarchical_min), "min\n")
+# cat("  Custom:", mean(comparison$time_custom_min), "min\n")
+```
+
+```{r print-comparison-results}
+# Automatically select best configuration
+#which_col <- which.min(c(min(comparison$n_groups_hierarchical), min(comparison$n_groups_custom)))
+#which_method <- c("cluster_hierarchical", "cluster_custom")[which_col]
+#which_order <- comparison$ordering_method[which.min(comparison[, (which_col + 1)])]
+#reversed <- comparison$reversed[which.min(comparison[, (which_col + 1)])]
+
+
+which_method <- "cluster_custom"
+which_order <- "east-west"
+reversed <- TRUE
+
+cat("Selected best configuration:\n")
+cat("  Clustering method:", which_method, "\n")
+cat("  Ordering method:", which_order, "\n")
+cat("  Reversed:", reversed, "\n\n")
+
+# Hardcoded best configuration (from previous analysis)
+
 
 # Run grouping with optimal configuration
 grouped_lynx <- group_lynx_families(
   data = dat,
-  clustering_method = best_method,
-  ordering_method = best_ordering,
-  reversed = best_reversed,
-  optimize_group_count = TRUE,
-  optimize_distances = TRUE,
-  group_col = "gruppe_id" # Norwegian naming convention
+  clustering_method = which_method,
+  ordering_method = which_order,
+  reversed = reversed,
+  optimize_group_count = TRUE, # Minimize total number of family groups (previously pretty_groups())
+  optimize_distances = TRUE, # Minimize distances within family groups (more spatially compact groups, previously pretty_lines())
+  group_col = "gruppe_id"
 )
 
-# Display results
 cat("Grouping results:\n")
 cat("  Total groups:", length(unique(grouped_lynx$gruppe_id)), "\n")
-cat("  Total observations:", nrow(grouped_lynx), "\n\n")
+cat("  Total observations:", nrow(grouped_lynx), "\n")
+
+# Verify the grouping worked correctly
+cat("\nGrouping verification:\n")
+cat("  Unique gruppe_id values:", length(unique(grouped_lynx$gruppe_id)), "\n")
+cat("  Min gruppe_id:", min(grouped_lynx$gruppe_id, na.rm = TRUE), "\n")
+cat("  Max gruppe_id:", max(grouped_lynx$gruppe_id, na.rm = TRUE), "\n")
+cat("  Any NA groups?:", any(is.na(grouped_lynx$gruppe_id)), "\n\n")
 
 # Group size distribution (detailed)
 group_sizes <- table(grouped_lynx$gruppe_id)
@@ -196,17 +263,25 @@ for (i in seq_along(group_sizes)) {
 cat("\n")
 ```
 
-## 5. Create Visualization Objects
+
+## 4. Create Visualization Objects
 
 ```{r create-viz-objects}
 # Extract group assignments (rovbase_id: gruppe_id)
 group_assignments <- grouped_lynx %>%
   st_drop_geometry() %>%
-  select(rovbase_id, gruppe_id)
+  select(rovbase_id, gruppe_id) %>%
+  mutate(rovbase_id = as.character(rovbase_id))
 
 # Join group assignments to "original" observations dataset for visualization
-lynx_family_observations <- lynx_family_test_data %>%
+lynx_family_observations <- obs_pnt %>%
+  mutate(rovbase_id = as.character(rovbase_id)) %>%
   left_join(group_assignments, by = "rovbase_id")
+
+# Ensure CRS is preserved
+if (is.na(st_crs(lynx_family_observations))) {
+  lynx_family_observations <- st_set_crs(lynx_family_observations, st_crs(dat))
+}
 
 # Calculate group centers (centroids) based on clustered observations
 lynx_family_group_centers <- create_center_points(
@@ -214,7 +289,14 @@ lynx_family_group_centers <- create_center_points(
   group_col = "gruppe_id"
 )
 
+# Ensure CRS for centers
+if (is.na(st_crs(lynx_family_group_centers))) {
+  lynx_family_group_centers <- st_set_crs(lynx_family_group_centers, st_crs(dat))
+}
+
 cat("Group centers calculated:\n")
+cat("  Number of centers:", nrow(lynx_family_group_centers), "\n")
+cat("  Expected (unique groups):", length(unique(grouped_lynx$gruppe_id)), "\n")
 print(lynx_family_group_centers)
 
 # Create lines connecting observations to group centers
@@ -224,15 +306,30 @@ lynx_family_group_lines <- create_lines(
   group_col = "gruppe_id"
 )
 
-# Add gruppe_id back to lines for visualization
+# Ensure CRS for lines and add gruppe_id back
+if (is.na(st_crs(lynx_family_group_lines))) {
+  lynx_family_group_lines <- st_set_crs(lynx_family_group_lines, st_crs(dat))
+}
 lynx_family_group_lines$gruppe_id <- lynx_family_observations$gruppe_id[match(lynx_family_group_lines$rovbase_id, lynx_family_observations$rovbase_id)]
+
 cat("\nConnection lines created:\n")
 cat("  Total lines:", nrow(lynx_family_group_lines), "\n")
 ```
 
-## 6. Interactive Map Visualization
+## 5. Interactive Map Visualization
 
 ```{r visualize-map, fig.width=10, fig.height=8}
+# Check and set CRS if missing (use same CRS as dat)
+if (is.na(st_crs(lynx_family_observations))) {
+  lynx_family_observations <- st_set_crs(lynx_family_observations, st_crs(dat))
+}
+if (is.na(st_crs(lynx_family_group_centers))) {
+  lynx_family_group_centers <- st_set_crs(lynx_family_group_centers, st_crs(dat))
+}
+if (is.na(st_crs(lynx_family_group_lines))) {
+  lynx_family_group_lines <- st_set_crs(lynx_family_group_lines, st_crs(dat))
+}
+
 # Transform to WGS84 for leaflet
 grouped_wgs84 <- st_transform(lynx_family_observations, 4326)
 centers_wgs84 <- st_transform(lynx_family_group_centers, 4326)
@@ -344,15 +441,15 @@ write.csv(
 cat("Tabular data saved to CSV:\n")
 cat("  -", file.path(output_dir, "lynx_family_group_assignments_migrated.csv"), "\n\n")
 
-# Save comparison results
-write.csv(
-  comparison,
-  file.path(output_dir, "sensitivity_analysis_migrated.csv"),
-  row.names = FALSE
-)
-
-cat("Sensitivity analysis saved:\n")
-cat("  -", file.path(output_dir, "sensitivity_analysis_migrated.csv"), "\n\n")
+# Save comparison results (if comparison was run)
+# write.csv(
+#   comparison,
+#   file.path(output_dir, "sensitivity_analysis_migrated.csv"),
+#   row.names = FALSE
+# )
+# 
+# cat("Sensitivity analysis saved:\n")
+# cat("  -", file.path(output_dir, "sensitivity_analysis_migrated.csv"), "\n\n")
 
 # Save interactive map
 saveWidget(
@@ -363,4 +460,8 @@ saveWidget(
 
 cat("Interactive map saved:\n")
 cat("  -", file.path(output_dir, "lynx_family_groups_map_migrated.html"), "\n")
+```
+
+```{r-session-info}
+sessionInfo()
 ```
