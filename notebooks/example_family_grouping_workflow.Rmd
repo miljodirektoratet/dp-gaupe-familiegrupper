@@ -43,17 +43,66 @@ pipeline approach:
 
 # 1. Setup
 
+```{r setup, include=FALSE}
+# --- Set up R Markdown environment ---
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+
+# Clear workspace
+rm(list = ls())
+
+# Set path based on environment (docker vs local linux)
+if (grepl("/home/rstudio/workspace", getwd())) {
+  base_path <- "/home/rstudio/workspace"
+} else {
+  base_path <- "~/git/miljodirektoratet/dp-gaupe-familiegrupper"
+}
+
+cat("Base path set to:", base_path, "\n")
+cat("Current working directory:", getwd(), "\n")
+```
+
 ## 1.1 Load Libraries
 
+```{r install-required-libraries}
+# --- Install required packages if missing ---
+ncpus <- parallel::detectCores()
+
+required_pkgs <- c(
+  "tictoc", 
+  "arrow",
+  "leaflet",  # leaflet depends on raster and terra, very heavy packages. 
+  "leaflet.extras2", 
+  "viridis", 
+  "htmlwidgets",
+  "miljodirektoratet/dp-gaupe-familiegrupper" # Package: gaupefam
+)
+
+message("\nINFO: Installing required packages from scratch...")
+  for (pkg in required_pkgs) {
+    if (!requireNamespace(pkg, quietly = TRUE)) {
+      renv::install(pkg, Ncpus = ncpus)
+    }
+  }
+```
+
 ```{r libraries}
-# Load required packages
-library(gaupefam) # Our package with all family grouping functions
-library(sf) # Spatial data handling
-library(dplyr) # Data manipulation
-library(ggplot2) # Plotting
-library(leaflet) # Interactive maps
-library(htmlwidgets) # Save interactive maps
-library(viridis) # Color palettes
+# --- Load libraries ---
+libs <- c(
+  "sf",       # spatial data handling
+  "dplyr",    # data wrangling
+  "leaflet",  # interactive maps
+  "viridis",  # color palette
+  "yaml",     # yaml files (config file)
+  "ggplot2",  # plotting
+  # "SparkR",   # SparkR for Unity Catalog (if needed)
+  "gaupefam"  # custom package fro gaupe clustering analysis (miljodirektoratet/dp-gaupe_familiegrupper)
+)
+
+invisible(lapply(libs, function(lib) suppressPackageStartupMessages(library(lib, character.only = TRUE))))
 
 # Enable s2 for spherical geometry
 sf::sf_use_s2(TRUE)
@@ -156,30 +205,80 @@ cat("  Mean:", round(mean(dat_timeline$duration_days), 1), "days\n")
 
 # 3. Group Observations
 
+**Note:** The `group_lynx_families()` function defaults to creating a column 
+named "gruppe_id" (Norwegian). We explicitly set `group_col = "group_id"` for 
+consistency. The function now validates its output and will throw helpful errors 
+if the column can't be created or if no groups are formed.
+
 ## 3.1 Basic Grouping
 
 ```{r basic-grouping}
+# First, let's check the input data and intermediate steps for debugging
+cat("Input data check:\n")
+cat("  Number of observations:", nrow(dat), "\n")
+cat("  Columns:", paste(names(dat), collapse = ", "), "\n\n")
+
+# Create matrices manually to debug
+dat_ordered <- order_observations(dat, which_order = "time", reversed = FALSE)
+
+# Check time matrix
+time_matrix <- create_time_matrix(
+  activity_from = dat_ordered$datotid_fra,
+  activity_to = dat_ordered$datotid_til
+)
+cat("Time matrix (days between observations):\n")
+print(round(time_matrix))
+
+# Check spatial distance matrix
+distance_matrix <- create_distance_matrix(geometry = dat_ordered$geometry)
+cat("\nSpatial distance matrix (meters):\n")
+print(round(distance_matrix))
+
+# Check distance rules
+distance_rule_matrix <- apply_distance_rules(
+  time_matrix = time_matrix,
+  prey_class = dat_ordered$byttedyr
+)
+cat("\nDistance rule matrix (max allowed distance in meters):\n")
+print(round(distance_rule_matrix))
+
+# Check grouping indicator
+grouping_indicator <- distance_rule_matrix > distance_matrix
+cat("\nGrouping indicator (can observations be grouped?):\n")
+print(grouping_indicator)
+cat("\nNumber of TRUE values (possible pairings):", sum(grouping_indicator), "\n\n")
+
 # Run grouping with default parameters
 grouped_basic <- group_lynx_families(
   data = dat,
   clustering_method = "cluster_custom",
   ordering_method = "time",
   reversed = FALSE,
-  optimize_group_count = TRUE,
-  optimize_distances = TRUE
+  optimize_group_count = FALSE,
+  optimize_distances = FALSE,
+    group_col = "group_id"
 )
 
 # Inspect results
 cat("Grouping results:\n")
-cat("  Total groups:", length(unique(grouped_basic$group_id)), "\n")
-cat("  Observations:", nrow(grouped_basic), "\n\n")
+cat("  Column names in result:", paste(names(grouped_basic), collapse = ", "), "\n")
+cat("  Total groups:", length(unique(na.omit(grouped_basic$group_id))), "\n")
+cat("  Observations:", nrow(grouped_basic), "\n")
+cat("  NAs in group_id:", sum(is.na(grouped_basic$group_id)), "\n\n")
 
 # Group size distribution
-group_sizes <- table(grouped_basic$group_id)
-cat("Group sizes:\n")
-print(group_sizes)
-cat("\n  Mean group size:", round(mean(group_sizes), 2), "\n")
-cat("  Max group size:", max(group_sizes), "\n")
+if (any(!is.na(grouped_basic$group_id))) {
+  group_sizes <- table(grouped_basic$group_id, useNA = "ifany")
+  cat("Group sizes:\n")
+  print(group_sizes)
+  valid_sizes <- group_sizes[!is.na(names(group_sizes))]
+  if (length(valid_sizes) > 0) {
+    cat("\n  Mean group size:", round(mean(valid_sizes), 2), "\n")
+    cat("  Max group size:", max(valid_sizes), "\n")
+  }
+} else {
+  cat("No groups were formed - all observations have NA group_id\n")
+}
 ```
 
 ## 3.2 Visualize Groups
@@ -208,7 +307,8 @@ grouped_hierarchical <- group_lynx_families(
   ordering_method = "time",
   optimize_group_count = TRUE,
   optimize_distances = TRUE,
-  hclust_poly = 1
+  hclust_poly = 1,
+  group_col = "group_id"
 )
 
 cat("Hierarchical clustering:\n")
@@ -220,7 +320,8 @@ grouped_pca <- group_lynx_families(
   clustering_method = "cluster_custom",
   ordering_method = "pca1",
   optimize_group_count = TRUE,
-  optimize_distances = TRUE
+  optimize_distances = TRUE,
+  group_col = "group_id"
 )
 
 cat("PCA1 ordering:\n")
@@ -232,7 +333,8 @@ grouped_no_opt <- group_lynx_families(
   clustering_method = "cluster_custom",
   ordering_method = "time",
   optimize_group_count = FALSE,
-  optimize_distances = FALSE
+  optimize_distances = FALSE,
+  group_col = "group_id"
 )
 
 cat("No optimization:\n")
@@ -257,7 +359,8 @@ cat("This may take a minute...\n\n")
 comparison <- compare_grouping_methods(
   data = dat,
   optimize_group_count = TRUE,
-  optimize_distances = TRUE
+  optimize_distances = TRUE,
+  group_col = "group_id"
 )
 
 # Display results
@@ -580,7 +683,7 @@ This workflow can be adapted for:
 - **Quality control**: Add validation checks and diagnostic plots
 
 For more information, see the package documentation:
-```r
+```{r}
 ?group_lynx_families
 ?compare_grouping_methods
 ```

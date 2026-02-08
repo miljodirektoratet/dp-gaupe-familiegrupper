@@ -31,10 +31,11 @@
 #'   Default is "gruppe_id" (Norwegian naming convention). Can be set to "group_id"
 #'   or any custom name.
 #'
-#' @return An sf object identical to input data with added column:
-#'   \itemize{
-#'     \item gruppe_id (or custom name) - Integer group assignment for each observation
-#'   }
+#' @return An sf object identical to input data with added column specified by
+#'   \code{group_col} (default "gruppe_id"). Contains integer group assignments.
+#'   The function validates that the column was created successfully and will
+#'   throw an error if it fails. Warnings are issued if all values are NA (no
+#'   groups formed) or if the data type is unexpected.
 #'
 #' @export
 #'
@@ -162,6 +163,31 @@ group_lynx_families <- function(data,
 
   # === Return Enriched Data ===
   data_ordered[[group_col]] <- group_assignments
+
+  # === Validate Output ===
+  # Check that the column was created successfully
+  if (!group_col %in% names(data_ordered)) {
+    stop(
+      "Failed to create output column '", group_col, "'. ",
+      "Available columns: ", paste(names(data_ordered), collapse = ", ")
+    )
+  }
+
+  # Check that group assignments are valid
+  if (all(is.na(data_ordered[[group_col]]))) {
+    warning(
+      "All group assignments are NA. This may indicate that no observations ",
+      "could be grouped based on the distance rules and clustering method."
+    )
+  }
+
+  # Check that group_col contains expected data type
+  if (!is.integer(data_ordered[[group_col]]) && !all(is.na(data_ordered[[group_col]]))) {
+    warning(
+      "Column '", group_col, "' is not integer type. ",
+      "Expected integer group IDs, got: ", class(data_ordered[[group_col]])[1]
+    )
+  }
 
   data_ordered
 }
