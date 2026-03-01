@@ -9,14 +9,19 @@ create_center_points(data, group_col = "gruppe_id")
 \arguments{
 \item{data}{An sf object with a geometry column and a grouping column.}
 
-\item{group_col}{The name of the grouping column (as a string or unquoted symbol). Default is "gruppe_id".}
+\item{group_col}{The name of the grouping column (as a string or unquoted
+symbol). Default is "gruppe_id".}
 }
 \value{
-An sf object with one centroid point per group, using the same CRS as the input.
+An sf object with one centroid point per group, using the same CRS
+as the input.
 }
 \description{
-Computes the centroid (mean X and Y coordinates) for each group in a spatial dataset and returns them as an sf object.
+Computes the centroid (mean X and Y coordinates) for each group in a
+spatial dataset and returns them as an sf object.
 }
 \details{
-The function calculates the centroid of each group by averaging the centroid coordinates of all observations in that group. The output CRS is set to match the input data.
+The function calculates the centroid of each group by averaging
+the centroid coordinates of all observations in that group. The output
+CRS is set to match the input data.
 }

@@ -6,8 +6,8 @@ test_that("compare_grouping_methods returns data.frame with expected structure",
   )
 
   expect_s3_class(result, "data.frame")
-  expect_equal(ncol(result), 4)
-  expect_named(result, c("ordering_method", "reversed", "n_groups_hierarchical", "n_groups_custom"))
+  expect_equal(ncol(result), 6)
+  expect_named(result, c("ordering_method", "reversed", "n_groups_hierarchical", "n_groups_custom", "time_hierarchical_min", "time_custom_min"))
 })
 
 test_that("compare_grouping_methods tests all 15 ordering strategies", {
@@ -114,8 +114,15 @@ test_that("compare_grouping_methods random seeds produce consistent results", {
     data = lynx_family_test_data
   )
 
-  # Results should be identical when using same random seed
-  expect_equal(result1, result2)
+  # Results should be identical when using same random seed (excluding timing columns)
+  # Timing columns are non-deterministic and should not be compared
+  result1_deterministic <- result1[, !names(result1) %in% c("time_hierarchical_min", "time_custom_min")]
+  result2_deterministic <- result2[, !names(result2) %in% c("time_hierarchical_min", "time_custom_min")]
+  expect_equal(result1_deterministic, result2_deterministic)
+
+  # Timing columns should exist and be numeric
+  expect_type(result1$time_hierarchical_min, "double")
+  expect_type(result1$time_custom_min, "double")
 })
 
 test_that("compare_grouping_methods returns numeric group counts", {

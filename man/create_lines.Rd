@@ -16,16 +16,20 @@ create_lines(
 
 \item{centers}{An sf object of group centers (points).}
 
-\item{group_col}{The name of the grouping column (string). Default is "gruppe_id".}
+\item{group_col}{The name of the grouping column (string). Default is
+"gruppe_id".}
 
-\item{id_col}{The name of the observation ID column (string). Default is "rovbase_id".}
+\item{id_col}{The name of the observation ID column (string). Default is
+"rovbase_id".}
 }
 \value{
-An sf object of lines, each connecting an observation to its group center, with the observation ID as an attribute.
+An sf object of lines, each connecting an observation to its group
+center, with the observation ID as an attribute.
 }
 \description{
 Creates line geometries connecting each observation to its group center.
 }
 \details{
-The function matches each observation to its group center and creates a line between them. CRS is inherited from the input observations.
+The function matches each observation to its group center and
+creates a line between them. CRS is inherited from the input observations.
 }

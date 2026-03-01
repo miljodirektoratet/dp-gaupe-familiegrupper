@@ -7,20 +7,31 @@
 apply_distance_rules(time_matrix, prey_class, dist_rules = NULL, max_days = 11)
 }
 \arguments{
-\item{time_matrix}{A symmetric matrix of temporal distances (e.g., days) between observations.}
+\item{time_matrix}{A symmetric matrix of temporal distances (e.g., days)
+between observations.}
 
-\item{prey_class}{A character or factor vector of prey class for each observation (length must match nrow(time_matrix)).}
+\item{prey_class}{A character or factor vector of prey class for each
+observation (length must match nrow(time_matrix)).}
 
-\item{dist_rules}{A data.frame with columns: prey_class1, prey_class2, temporal_distance_days, distance_threshold_m (distance threshold in meters). Defaults to the package dataset \code{lut_distance_rules} if not supplied.}
+\item{dist_rules}{A data.frame with columns: prey_class1, prey_class2,
+temporal_distance_days, distance_threshold_m (distance threshold in
+meters). Defaults to the package dataset \code{lut_distance_rules} if not
+supplied.}
 
-\item{max_days}{The maximum number of days to use for rule lookup (values above are capped). Default: 11.}
+\item{max_days}{The maximum number of days to use for rule lookup (values
+above are capped). Default: 11.}
 }
 \value{
-A symmetric matrix of distance thresholds (same dimensions as time_matrix).
+A symmetric matrix of distance thresholds (same dimensions as
+time_matrix).
 }
 \description{
-Generates a matrix of spatial distance thresholds for each observation pair, based on their prey classes and temporal separation.
+Generates a matrix of spatial distance thresholds for each observation
+pair, based on their prey classes and temporal separation.
 }
 \details{
-For each observation pair, looks up the allowed spatial distance threshold in dist_rules (defaults to \code{lut_distance_rules} from the package) based on their prey classes and temporal separation. Diagonal is set to Inf.
+For each observation pair, looks up the allowed spatial distance
+threshold in dist_rules (defaults to \code{lut_distance_rules} from the
+package) based on their prey classes and temporal separation. Diagonal is
+set to Inf.
 }

@@ -6,16 +6,24 @@
 \usage{
 compare_grouping_methods(
   data,
+  clustering_methods = c("both"),
   optimize_group_count = TRUE,
   optimize_distances = TRUE,
   hclust_poly = 1,
-  group_col = "group_id"
+  group_col = "group_id",
+  parallel = TRUE,
+  n_cores = NULL,
+  verbose = TRUE
 )
 }
 \arguments{
 \item{data}{An sf object containing lynx observations with columns:
 rovbase_id, datotid_fra, datotid_til, byttedyr, geometry
 (same format as group_lynx_families).}
+
+\item{clustering_methods}{Character vector. Which clustering methods to test.
+Options: c("both"), c("hierarchical"), c("custom"), or c("hierarchical", "custom").
+Default is c("both"). Use single method to reduce runtime by ~50\%.}
 
 \item{optimize_group_count}{Logical. Apply group count optimization in each run?
 Default TRUE.}
@@ -28,6 +36,15 @@ Default 1.}
 
 \item{group_col}{Character. Name of the group column to create/use.
 Default "group_id". Must match the column name used in group_lynx_families().}
+
+\item{parallel}{Logical. Use parallel processing? Default TRUE.
+Requires 'parallel' package.}
+
+\item{n_cores}{Integer. Number of cores to use for parallel processing.
+Default is min(2, detectCores() - 1) for safety.}
+
+\item{verbose}{Logical. Print progress after each configuration? Default TRUE.
+When parallel=TRUE, prints batch summaries instead of individual configs.}
 }
 \value{
 A data.frame with comparison metrics:
@@ -36,6 +53,8 @@ A data.frame with comparison metrics:
 \item reversed - Whether ordering was reversed (logical)
 \item n_groups_hierarchical - Number of groups with hierarchical clustering
 \item n_groups_custom - Number of groups with custom clustering
+\item time_hierarchical_min - Time in minutes for hierarchical clustering
+\item time_custom_min - Time in minutes for custom clustering
 }
 }
 \description{
@@ -48,11 +67,21 @@ algorithms to assess sensitivity and find optimal configuration. Tests
 \dontrun{
 library(gaupefam)
 
-# Compare all methods
+# Compare all methods (parallel)
 comparison <- compare_grouping_methods(
   data = lynx_family_test_data,
   optimize_group_count = TRUE,
-  optimize_distances = TRUE
+  optimize_distances = TRUE,
+  parallel = TRUE
+)
+
+# Test only custom clustering (faster)
+comparison_custom <- compare_grouping_methods(
+  data = lynx_family_test_data,
+  clustering_methods = "custom",
+  optimize_group_count = FALSE,
+  optimize_distances = FALSE,
+  parallel = TRUE
 )
 
 # View results
