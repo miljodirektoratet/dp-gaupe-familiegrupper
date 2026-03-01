@@ -257,35 +257,33 @@ Dev Containers.
     - Configures VS Code with recommended settings and extensions per
       [devcontainer.json](.devcontainer/devcontainer.json)
     - Installs development tools: [Git](https://git-scm.com/),
-      [pre-commit](https://pre-commit.com/),
-      [Task](https://taskfile.dev/installation/)
+      [pre-commit](https://pre-commit.com/)
     - Sets up the R environment with dependencies in `renv` via
-      `task dev-setup`, which runs `renv::init()` and executes code
-      quality checks (`devtools::check()`) and tests
-      (`devtools::test()`).
+      `renv::restore()`
+    - Executes initial code quality checks (`devtools::check()`) and
+      tests (`devtools::test()`)
 
-4.  **Test the installation with Task commands**:
+4.  **Verify the installation**:
 
-    Task is used to automate common development tasks *(see
-    [Taskfile.yml](Taskfile.yml))*.
+    ``` r
+    # Load the package
+    devtools::load_all()
 
-    ``` bash
-    # Test the package
-    task run
+    # Run tests
+    devtools::test()
 
-    # Run quality checks
-    task check
+    # Run full package checks
+    devtools::check()
 
-    # Run local CI workflow
-    task ci-local
-
-    # Clean up
-    task clean
+    # Run complete local CI workflow
+    source("scripts/ci-local.R")
     ```
 
-5.  **Test the notebook**: Open `notebooks/demo.ipynb` and select the
-    `.venv` kernel. If you have problems activating the `.venv` refer to
-    the [setup guide](./docs/setup-guide.md).
+5.  **Test the example notebook**: Open
+    `notebooks/example_family_grouping_workflow.Rmd` in RStudio or
+    render it with
+    `rmarkdown::render("notebooks/example_family_grouping_workflow.Rmd")`
+    to see a complete workflow demonstration.
 
 6.  **Configure the GitHub Repository**: If you fork this repository or
     use it to create a new repository from scratch, you’ll need to
@@ -306,22 +304,31 @@ Dev Containers.
     `devtools::test()`.
 5.  **Check**: run `devtools::check()` to ensure your package passes all
     checks.
-6.  **README**: update `README.Rmd` and build with
+6.  **Local CI**: run the complete quality check workflow with
+    `source("scripts/ci-local.R")` which executes:
+    - `renv::status()` and `renv::snapshot()` for dependency management
+    - `devtools::load_all()` to test package loading
+    - `lintr::lint_dir()` for code quality
+    - `styler::style_dir()` for code formatting
+    - `devtools::document()` and `devtools::build_readme()` for
+      documentation
+    - `devtools::test()` and `devtools::check()` for validation
+7.  **README**: update `README.Rmd` and build with
     `devtools::build_readme()`.
-7.  **Commit**: stage and commit changes using Git, pre-commit hooks
+8.  **Commit**: stage and commit changes using Git, pre-commit hooks
     will run automatically.
-8.  **Push**: push your branch to GitHub and create a pull request for
+9.  **Push**: push your branch to GitHub and create a pull request for
     review, GitHub Actions will run tests automatically.
 
 See [Command Cheat Sheet](./docs/command-cheatsheet.md) for common
-commands.
+commands and `scripts/ci-local.R` for the complete local CI workflow.
 
 ### Code Quality Standards
 
 Follow R coding standards with roxygen2 documentation, consistent
 formatting via styler, and comprehensive testing with testthat. All
-quality checks are automated through Task commands, pre-commit hooks and
-CI workflows.
+quality checks are automated through the `scripts/ci-local.R` script,
+pre-commit hooks, and CI workflows.
 
 See the [Code Quality and Security
 Standards](./docs/code-and-security-standards.md) guide to see which
