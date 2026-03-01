@@ -22,7 +22,7 @@
 #' @param parallel Logical. Use parallel processing? Default TRUE.
 #'   Requires 'parallel' package.
 #' @param n_cores Integer. Number of cores to use for parallel processing.
-#'   Default is detectCores() - 1.
+#'   Default is min(2, detectCores() - 1) for safety.
 #' @param verbose Logical. Print progress after each configuration? Default TRUE.
 #'   When parallel=TRUE, prints batch summaries instead of individual configs.
 #'
@@ -89,7 +89,7 @@ compare_grouping_methods <- function(data,
   if (length(missing_cols) > 0) {
     stop("'data' is missing required columns: ", paste(missing_cols, collapse = ", "))
   }
-  
+
   # Validate clustering_methods parameter
   if ("both" %in% clustering_methods) {
     test_hierarchical <- TRUE
@@ -98,11 +98,11 @@ compare_grouping_methods <- function(data,
     test_hierarchical <- "hierarchical" %in% clustering_methods
     test_custom <- "custom" %in% clustering_methods
   }
-  
+
   if (!test_hierarchical && !test_custom) {
     stop("'clustering_methods' must be 'both', 'hierarchical', 'custom', or c('hierarchical', 'custom')")
   }
-  
+
   # Setup parallel processing
   if (parallel) {
     if (!requireNamespace("parallel", quietly = TRUE)) {
@@ -110,7 +110,9 @@ compare_grouping_methods <- function(data,
       parallel <- FALSE
     } else {
       if (is.null(n_cores)) {
-        n_cores <- max(1, parallel::detectCores() - 1)
+        # Cap at 2 cores by default for safety (avoids spawning too many processes)
+        detected_cores <- parallel::detectCores(logical = FALSE)
+        n_cores <- min(2, max(1, detected_cores - 1))
       }
       if (verbose) cat("Parallel processing enabled with", n_cores, "cores\n")
     }
@@ -128,7 +130,7 @@ compare_grouping_methods <- function(data,
   n_random_configs <- 5
   total_configs <- n_standard_configs + n_random_configs
   current_config <- 0
-  
+
   methods_to_test <- c()
   if (test_hierarchical) methods_to_test <- c(methods_to_test, "hierarchical")
   if (test_custom) methods_to_test <- c(methods_to_test, "custom")
@@ -153,21 +155,21 @@ compare_grouping_methods <- function(data,
     } else {
       config_name <- sprintf("%s (reversed=%s)", config$method, config$reversed)
     }
-    
+
     # Initialize result variables
     n_groups_h <- NA
     time_h_min <- NA
     n_groups_c <- NA
     time_c_min <- NA
-    
+
     # Hierarchical clustering (if requested)
     if (test_hierarchical) {
       start_time_h <- Sys.time()
       result_h <- group_lynx_families(
         data = data,
         clustering_method = "cluster_hierarchical",
-        ordering_method = if(is_random) "random" else config$method,
-        reversed = if(is_random) FALSE else config$reversed,
+        ordering_method = if (is_random) "random" else config$method,
+        reversed = if (is_random) FALSE else config$reversed,
         optimize_group_count = optimize_group_count,
         optimize_distances = optimize_distances,
         hclust_poly = hclust_poly,
@@ -184,8 +186,8 @@ compare_grouping_methods <- function(data,
       result_c <- group_lynx_families(
         data = data,
         clustering_method = "cluster_custom",
-        ordering_method = if(is_random) "random" else config$method,
-        reversed = if(is_random) FALSE else config$reversed,
+        ordering_method = if (is_random) "random" else config$method,
+        reversed = if (is_random) FALSE else config$reversed,
         optimize_group_count = optimize_group_count,
         optimize_distances = optimize_distances,
         group_col = group_col
@@ -196,8 +198,8 @@ compare_grouping_methods <- function(data,
     }
 
     list(
-      ordering_method = if(is_random) config_name else config$method,
-      reversed = if(is_random) FALSE else config$reversed,
+      ordering_method = if (is_random) config_name else config$method,
+      reversed = if (is_random) FALSE else config$reversed,
       n_groups_hierarchical = n_groups_h,
       n_groups_custom = n_groups_c,
       time_hierarchical_min = time_h_min,
@@ -210,26 +212,29 @@ compare_grouping_methods <- function(data,
   if (parallel) {
     cl <- parallel::makeCluster(n_cores)
     on.exit(parallel::stopCluster(cl))
-    
+
     # Detect base path for package loading
     base_path <- if (grepl("/home/rstudio/workspace", getwd())) {
       "/home/rstudio/workspace"
     } else {
       "/home/wilaca/git/miljodirektoratet/dp-gaupe-familiegrupper"
     }
-    
+
     # Export necessary objects to cluster
-    parallel::clusterExport(cl, c("data", "optimize_group_count", "optimize_distances",
-                                   "hclust_poly", "group_col", "test_config", 
-                                   "ordering_configs", "base_path", "test_hierarchical", 
-                                   "test_custom"),
-                            envir = environment())
-    
+    parallel::clusterExport(cl, c(
+      "data", "optimize_group_count", "optimize_distances",
+      "hclust_poly", "group_col", "test_config",
+      "ordering_configs", "base_path", "test_hierarchical",
+      "test_custom"
+    ),
+    envir = environment()
+    )
+
     # Load the entire package on each worker
     parallel::clusterEvalQ(cl, {
       library(sf)
       library(dplyr)
-      
+
       # Try to load package (production: library, development: devtools::load_all)
       if (requireNamespace("gaupefam", quietly = TRUE)) {
         # Package is installed - use it (production)
@@ -241,12 +246,12 @@ compare_grouping_methods <- function(data,
         stop("Package 'gaupefam' not found. Install it or ensure devtools is available for development.")
       }
     })
-    
+
     if (verbose) cat("Running standard orderings in parallel...\n")
     results_standard <- parallel::parLapply(cl, seq_len(nrow(ordering_configs)), function(i) {
       test_config(i, ordering_configs[i, ], is_random = FALSE)
     })
-    
+
     # Print summary after standard configs
     if (verbose) {
       cat("Standard orderings complete. Current standings:\n")
@@ -259,58 +264,67 @@ compare_grouping_methods <- function(data,
           stringsAsFactors = FALSE
         )
       }))
-      
+
       if (test_hierarchical && !all(is.na(temp_df$n_groups_hierarchical))) {
         best_h <- which.min(temp_df$n_groups_hierarchical)
-        cat(sprintf("  Best hierarchical: %s (reversed=%s) with %d groups\n",
-                    temp_df$ordering_method[best_h],
-                    temp_df$reversed[best_h],
-                    temp_df$n_groups_hierarchical[best_h]))
+        cat(sprintf(
+          "  Best hierarchical: %s (reversed=%s) with %d groups\n",
+          temp_df$ordering_method[best_h],
+          temp_df$reversed[best_h],
+          temp_df$n_groups_hierarchical[best_h]
+        ))
       }
-      
+
       if (test_custom && !all(is.na(temp_df$n_groups_custom))) {
         best_c <- which.min(temp_df$n_groups_custom)
-        cat(sprintf("  Best custom: %s (reversed=%s) with %d groups\n",
-                    temp_df$ordering_method[best_c],
-                    temp_df$reversed[best_c],
-                    temp_df$n_groups_custom[best_c]))
+        cat(sprintf(
+          "  Best custom: %s (reversed=%s) with %d groups\n",
+          temp_df$ordering_method[best_c],
+          temp_df$reversed[best_c],
+          temp_df$n_groups_custom[best_c]
+        ))
       }
       cat("\n")
     }
-    
+
     if (verbose) cat("Running random orderings in parallel...\n")
     results_random <- parallel::parLapply(cl, 1:5, function(seed) {
       test_config(seed, NULL, is_random = TRUE, seed = seed)
     })
-    
+
     results <- c(results_standard, results_random)
-    
   } else {
     results <- list()
-    
+
     # Test standard orderings (sequential)
     for (i in seq_len(nrow(ordering_configs))) {
       config <- ordering_configs[i, ]
       current_config <- current_config + 1
-      
+
       if (verbose) {
-        cat(sprintf("\n[%d/%d] Testing: %s (reversed=%s)\n", 
-                    current_config, total_configs, config$method, config$reversed))
+        cat(sprintf(
+          "\n[%d/%d] Testing: %s (reversed=%s)\n",
+          current_config, total_configs, config$method, config$reversed
+        ))
         cat("----------------------------------------\n")
       }
-      
+
       res <- test_config(i, config, is_random = FALSE)
-      
+
       if (verbose) {
         if (test_hierarchical && !is.na(res$n_groups_hierarchical)) {
-          cat(sprintf("  Hierarchical: %d groups (%.2f min)\n", 
-                      res$n_groups_hierarchical, res$time_hierarchical_min))
+          cat(sprintf(
+            "  Hierarchical: %d groups (%.2f min)\n",
+            res$n_groups_hierarchical, res$time_hierarchical_min
+          ))
         }
         if (test_custom && !is.na(res$n_groups_custom)) {
-          cat(sprintf("  Custom: %d groups (%.2f min)\n", 
-                      res$n_groups_custom, res$time_custom_min))
+          cat(sprintf(
+            "  Custom: %d groups (%.2f min)\n",
+            res$n_groups_custom, res$time_custom_min
+          ))
         }
-        
+
         # Show running best
         temp_results <- results
         temp_results[[length(temp_results) + 1]] <- res
@@ -322,47 +336,57 @@ compare_grouping_methods <- function(data,
             stringsAsFactors = FALSE
           )
         }))
-        
+
         cat("  Running best so far:\n")
         if (test_hierarchical && !all(is.na(temp_df$n_groups_hierarchical))) {
           min_h <- min(temp_df$n_groups_hierarchical, na.rm = TRUE)
           count_h <- sum(temp_df$n_groups_hierarchical == min_h, na.rm = TRUE)
-          cat(sprintf("    Hierarchical: %d groups (%d config%s)\n", 
-                      min_h, count_h, ifelse(count_h > 1, "s", "")))
+          cat(sprintf(
+            "    Hierarchical: %d groups (%d config%s)\n",
+            min_h, count_h, ifelse(count_h > 1, "s", "")
+          ))
         }
         if (test_custom && !all(is.na(temp_df$n_groups_custom))) {
           min_c <- min(temp_df$n_groups_custom, na.rm = TRUE)
           count_c <- sum(temp_df$n_groups_custom == min_c, na.rm = TRUE)
-          cat(sprintf("    Custom: %d groups (%d config%s)\n", 
-                      min_c, count_c, ifelse(count_c > 1, "s", "")))
+          cat(sprintf(
+            "    Custom: %d groups (%d config%s)\n",
+            min_c, count_c, ifelse(count_c > 1, "s", "")
+          ))
         }
       }
-      
+
       results[[i]] <- res
     }
 
     # Test random orderings (sequential)
     for (seed in 1:5) {
       current_config <- current_config + 1
-      
+
       if (verbose) {
-        cat(sprintf("\n[%d/%d] Testing: random_seed%d\n", 
-                    current_config, total_configs, seed))
+        cat(sprintf(
+          "\n[%d/%d] Testing: random_seed%d\n",
+          current_config, total_configs, seed
+        ))
         cat("----------------------------------------\n")
       }
-      
+
       res <- test_config(seed, NULL, is_random = TRUE, seed = seed)
-      
+
       if (verbose) {
         if (test_hierarchical && !is.na(res$n_groups_hierarchical)) {
-          cat(sprintf("  Hierarchical: %d groups (%.2f min)\n", 
-                      res$n_groups_hierarchical, res$time_hierarchical_min))
+          cat(sprintf(
+            "  Hierarchical: %d groups (%.2f min)\n",
+            res$n_groups_hierarchical, res$time_hierarchical_min
+          ))
         }
         if (test_custom && !is.na(res$n_groups_custom)) {
-          cat(sprintf("  Custom: %d groups (%.2f min)\n", 
-                      res$n_groups_custom, res$time_custom_min))
+          cat(sprintf(
+            "  Custom: %d groups (%.2f min)\n",
+            res$n_groups_custom, res$time_custom_min
+          ))
         }
-        
+
         # Show running best
         temp_results <- results
         temp_results[[length(temp_results) + 1]] <- res
@@ -374,22 +398,26 @@ compare_grouping_methods <- function(data,
             stringsAsFactors = FALSE
           )
         }))
-        
+
         cat("  Running best so far:\n")
         if (test_hierarchical && !all(is.na(temp_df$n_groups_hierarchical))) {
           min_h <- min(temp_df$n_groups_hierarchical, na.rm = TRUE)
           count_h <- sum(temp_df$n_groups_hierarchical == min_h, na.rm = TRUE)
-          cat(sprintf("    Hierarchical: %d groups (%d config%s)\n", 
-                      min_h, count_h, ifelse(count_h > 1, "s", "")))
+          cat(sprintf(
+            "    Hierarchical: %d groups (%d config%s)\n",
+            min_h, count_h, ifelse(count_h > 1, "s", "")
+          ))
         }
         if (test_custom && !all(is.na(temp_df$n_groups_custom))) {
           min_c <- min(temp_df$n_groups_custom, na.rm = TRUE)
           count_c <- sum(temp_df$n_groups_custom == min_c, na.rm = TRUE)
-          cat(sprintf("    Custom: %d groups (%d config%s)\n", 
-                      min_c, count_c, ifelse(count_c > 1, "s", "")))
+          cat(sprintf(
+            "    Custom: %d groups (%d config%s)\n",
+            min_c, count_c, ifelse(count_c > 1, "s", "")
+          ))
         }
       }
-      
+
       results[[nrow(ordering_configs) + seed]] <- res
     }
   }
@@ -414,39 +442,45 @@ compare_grouping_methods <- function(data,
   } else {
     best_h_idx <- NULL
   }
-  
+
   if (test_custom && any(!is.na(comparison$n_groups_custom))) {
     best_c_idx <- which.min(comparison$n_groups_custom)
   } else {
     best_c_idx <- NULL
   }
-  
+
   # Summary statistics
   if (verbose) {
     cat("\n========================================\n")
     cat("COMPARISON COMPLETE\n")
     cat("========================================\n")
-    
+
     total_time <- sum(comparison$time_hierarchical_min, comparison$time_custom_min, na.rm = TRUE)
     cat("Total execution time:", sprintf("%.2f min\n", total_time))
-    
+
     if (test_hierarchical && !is.null(best_h_idx)) {
       cat("\nHierarchical clustering results:\n")
-      cat(sprintf("  Groups: min=%d, max=%d, mean=%.1f\n", 
-                  min(comparison$n_groups_hierarchical, na.rm = TRUE), 
-                  max(comparison$n_groups_hierarchical, na.rm = TRUE),
-                  mean(comparison$n_groups_hierarchical, na.rm = TRUE)))
-      cat(sprintf("  Time: min=%.2f min, max=%.2f min, mean=%.2f min\n",
-                  min(comparison$time_hierarchical_min, na.rm = TRUE),
-                  max(comparison$time_hierarchical_min, na.rm = TRUE),
-                  mean(comparison$time_hierarchical_min, na.rm = TRUE)))
+      cat(sprintf(
+        "  Groups: min=%d, max=%d, mean=%.1f\n",
+        min(comparison$n_groups_hierarchical, na.rm = TRUE),
+        max(comparison$n_groups_hierarchical, na.rm = TRUE),
+        mean(comparison$n_groups_hierarchical, na.rm = TRUE)
+      ))
+      cat(sprintf(
+        "  Time: min=%.2f min, max=%.2f min, mean=%.2f min\n",
+        min(comparison$time_hierarchical_min, na.rm = TRUE),
+        max(comparison$time_hierarchical_min, na.rm = TRUE),
+        mean(comparison$time_hierarchical_min, na.rm = TRUE)
+      ))
       cat("  Best configuration (minimum groups):\n")
-      cat(sprintf("    Method: %s (reversed=%s)\n", 
-                  comparison$ordering_method[best_h_idx],
-                  comparison$reversed[best_h_idx]))
+      cat(sprintf(
+        "    Method: %s (reversed=%s)\n",
+        comparison$ordering_method[best_h_idx],
+        comparison$reversed[best_h_idx]
+      ))
       cat(sprintf("    Groups: %d\n", comparison$n_groups_hierarchical[best_h_idx]))
       cat(sprintf("    Time: %.2f min\n", comparison$time_hierarchical_min[best_h_idx]))
-      
+
       # Count how many configs achieved this minimum
       min_groups_h <- comparison$n_groups_hierarchical[best_h_idx]
       count_min_h <- sum(comparison$n_groups_hierarchical == min_groups_h, na.rm = TRUE)
@@ -454,24 +488,30 @@ compare_grouping_methods <- function(data,
         cat(sprintf("    (%d configurations achieved %d groups)\n", count_min_h, min_groups_h))
       }
     }
-    
+
     if (test_custom && !is.null(best_c_idx)) {
       cat("\nCustom clustering results:\n")
-      cat(sprintf("  Groups: min=%d, max=%d, mean=%.1f\n", 
-                  min(comparison$n_groups_custom, na.rm = TRUE), 
-                  max(comparison$n_groups_custom, na.rm = TRUE),
-                  mean(comparison$n_groups_custom, na.rm = TRUE)))
-      cat(sprintf("  Time: min=%.2f min, max=%.2f min, mean=%.2f min\n",
-                  min(comparison$time_custom_min, na.rm = TRUE),
-                  max(comparison$time_custom_min, na.rm = TRUE),
-                  mean(comparison$time_custom_min, na.rm = TRUE)))
+      cat(sprintf(
+        "  Groups: min=%d, max=%d, mean=%.1f\n",
+        min(comparison$n_groups_custom, na.rm = TRUE),
+        max(comparison$n_groups_custom, na.rm = TRUE),
+        mean(comparison$n_groups_custom, na.rm = TRUE)
+      ))
+      cat(sprintf(
+        "  Time: min=%.2f min, max=%.2f min, mean=%.2f min\n",
+        min(comparison$time_custom_min, na.rm = TRUE),
+        max(comparison$time_custom_min, na.rm = TRUE),
+        mean(comparison$time_custom_min, na.rm = TRUE)
+      ))
       cat("  Best configuration (minimum groups):\n")
-      cat(sprintf("    Method: %s (reversed=%s)\n", 
-                  comparison$ordering_method[best_c_idx],
-                  comparison$reversed[best_c_idx]))
+      cat(sprintf(
+        "    Method: %s (reversed=%s)\n",
+        comparison$ordering_method[best_c_idx],
+        comparison$reversed[best_c_idx]
+      ))
       cat(sprintf("    Groups: %d\n", comparison$n_groups_custom[best_c_idx]))
       cat(sprintf("    Time: %.2f min\n", comparison$time_custom_min[best_c_idx]))
-      
+
       # Count how many configs achieved this minimum
       min_groups_c <- comparison$n_groups_custom[best_c_idx]
       count_min_c <- sum(comparison$n_groups_custom == min_groups_c, na.rm = TRUE)
@@ -479,7 +519,7 @@ compare_grouping_methods <- function(data,
         cat(sprintf("    (%d configurations achieved %d groups)\n", count_min_c, min_groups_c))
       }
     }
-    
+
     cat("========================================\n\n")
   }
 

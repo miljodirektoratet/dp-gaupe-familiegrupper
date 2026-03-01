@@ -20,6 +20,7 @@ Generated from legacy rules in data-raw/lut_distance_rules.R
 lut_distance_rules
 }
 \description{
-A data frame of spatial distance thresholds for all combinations of prey classes and days, used for grouping and clustering.
+A data frame of spatial distance thresholds for all combinations of prey
+classes and days, used for grouping and clustering.
 }
 \keyword{datasets}

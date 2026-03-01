@@ -51,10 +51,11 @@ Default is "gruppe_id" (Norwegian naming convention). Can be set to "group_id"
 or any custom name.}
 }
 \value{
-An sf object identical to input data with added column:
-\itemize{
-\item gruppe_id (or custom name) - Integer group assignment for each observation
-}
+An sf object identical to input data with added column specified by
+\code{group_col} (default "gruppe_id"). Contains integer group assignments.
+The function validates that the column was created successfully and will
+throw an error if it fails. Warnings are issued if all values are NA (no
+groups formed) or if the data type is unexpected.
 }
 \description{
 Groups lynx observations into family groups based on spatiotemporal proximity
