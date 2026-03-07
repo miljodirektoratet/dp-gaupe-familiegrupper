@@ -1,6 +1,6 @@
 Package: gaupefam
 Title: Gaupe familiegrupper (Lynx family groups)
-Version: 0.0.0.9000
+Version: 1.0.0
 Authors@R: c(
     person("Willeke", "A'Campo", , "willeke.acampo@miljodir.no", role = c("cre")),
     person("Endre Gunnar", "Ofstad", role = "aut"),
