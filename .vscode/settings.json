@@ -1,7 +1,85 @@
+// Local VS Code Extension Configurations
+// Not used by Devcontainer instead configs are listed in .devcontainer/devcontainer.json
 {
-    "workbench.colorCustomizations": {
-        "activityBar.background": "#39244F",
-        "titleBar.activeBackground": "#50326E",
-        "titleBar.activeForeground": "#FBF9FC"
-    }
+  // Terminal
+  "terminal.integrated.defaultProfile.windows": "Command Prompt",
+  "terminal.integrated.defaultProfile.linux": "Bash",
+
+  // Profiles, Editors, and Themes
+  "editor.rulers": [
+    { "column": 88, "color": "#737171" },
+  ],
+  "editor.tabSize": 2,
+  "workbench.colorCustomizations": {
+    "activityBar.background": "#181818",
+    "titleBar.activeBackground": "#181818",
+    "titleBar.activeForeground": "#cccccc"
+  },  
+
+  // Python formatting
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+  },
+  "ruff.interpreter": [
+    ".venv/Scripts/python",
+    ".venv/bin/python",
+  ],
+  "autoDocstring.docstringFormat": "one-line-sphinx",
+  
+  // Python other settings (remove for project, let users decide)
+  "python.useEnvironmentsExtension": false, // Use Python Envy instead
+
+  // YAML formatting
+  "[yaml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2
+  },
+  "[yml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2
+  },
+
+  // TOML formatting
+  "[toml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2
+  },
+  "evenBetterToml.formatter.allowedBlankLines": 2,
+
+  // Markdown formatting
+  "[markdown]":{
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2
+  },
+
+  // Markdown Table of Contents settings
+  "markdown.extension.toc.levels": "2..2",
+  "markdown.extension.toc.updateOnSave": true,
+
+  // Git
+  "git.branchProtection": ["main"],
+  "git.allowNoVerifyCommit": true,
+  "git.confirmNoVerifyCommit": false,
+
+  // Docker
+  "containers.contexts.showInStatusBar": true,
+
+  // R 
+  "r.rpath.linux": "/usr/bin/R",
+  "r.bracketedPaste": true,
+  "r.rterm.linux": "${userHome}/.local/bin/radian",
+  "r.plot.devArgs": {
+      "width": 800,
+      "height": 1200
+  },
+  "[r]": {  
+      "editor.wordBasedSuggestions": "off",
+      "editor.wordSeparators": "`~!@#$%^&*()-=+[{]}\\|;:'\",<>/"
+  },
+
 }
