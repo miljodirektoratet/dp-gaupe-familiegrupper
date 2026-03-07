@@ -57,10 +57,10 @@ cat(
 )
 ```
 
-    ## Base path set to: /home/wilaca/git/miljodirektoratet/dp-gaupe-familiegrupper 
-    ##  Current working directory: /home/wilaca/git/miljodirektoratet/dp-gaupe-familiegrupper/notebooks 
-    ##  GEOS version: 3.12.1 
-    ##  GDAL version: 3.8.4 
+    ## Base path set to: /home/wilaca/git/miljodirektoratet/dp-gaupe-familiegrupper
+    ##  Current working directory: /home/wilaca/git/miljodirektoratet/dp-gaupe-familiegrupper/notebooks
+    ##  GEOS version: 3.12.1
+    ##  GDAL version: 3.8.4
     ##  PROJ version: 9.4.0
 
 ## 2. Load and Explore Data
@@ -143,29 +143,29 @@ comparison <- compare_grouping_methods(
 ```
 
     ## Parallel processing enabled with 7 cores
-    ## 
+    ##
     ## ========================================
     ## GROUPING METHOD COMPARISON
     ## ========================================
-    ## Total configurations to test: 15 
-    ##   - Standard orderings: 10 
-    ##   - Random orderings: 5 
-    ## Clustering methods: hierarchical, custom 
-    ## Total grouping runs: 30 
+    ## Total configurations to test: 15
+    ##   - Standard orderings: 10
+    ##   - Random orderings: 5
+    ## Clustering methods: hierarchical, custom
+    ## Total grouping runs: 30
     ## ========================================
-    ## 
+    ##
     ## Running standard orderings in parallel...
     ## Standard orderings complete. Current standings:
     ##   Best hierarchical: time (reversed=FALSE) with 2 groups
     ##   Best custom: time (reversed=FALSE) with 2 groups
-    ## 
+    ##
     ## Running random orderings in parallel...
-    ## 
+    ##
     ## ========================================
     ## COMPARISON COMPLETE
     ## ========================================
     ## Total execution time: 0.05 min
-    ## 
+    ##
     ## Hierarchical clustering results:
     ##   Groups: min=2, max=2, mean=2.0
     ##   Time: min=0.00 min, max=0.00 min, mean=0.00 min
@@ -174,7 +174,7 @@ comparison <- compare_grouping_methods(
     ##     Groups: 2
     ##     Time: 0.00 min
     ##     (15 configurations achieved 2 groups)
-    ## 
+    ##
     ## Custom clustering results:
     ##   Groups: min=2, max=2, mean=2.0
     ##   Time: min=0.00 min, max=0.00 min, mean=0.00 min
@@ -223,16 +223,16 @@ cat(
 ```
 
     ## Running analysis to find optimal configuration...
-    ## 
+    ##
     ##  Selected best configuration:
-    ##    Clustering method: cluster_hierarchical 
-    ##    Ordering method: time 
-    ##    Reversed: FALSE 
-    ## 
+    ##    Clustering method: cluster_hierarchical
+    ##    Ordering method: time
+    ##    Reversed: FALSE
+    ##
     ##  Grouping results:
-    ##    Total groups: 2 
-    ##    Total observations: 7 
-    ## 
+    ##    Total groups: 2
+    ##    Total observations: 7
+    ##
     ##  Group sizes (observations per group):
     ##    Group 1 : 3 observations
     ##   Group 2 : 4 observations
@@ -438,13 +438,13 @@ cat(
 ```
 
     ## === LYNX FAMILY GROUPING RESULTS SUMMARY ===
-    ## 
+    ##
     ##  GROUP STATISTICS
     ##  ----------------
-    ##  Total number of groups: 2 
-    ##  Total observations: 7 
-    ##  Observations per group (mean): 3.5 
-    ## 
+    ##  Total number of groups: 2
+    ##  Total observations: 7
+    ##  Observations per group (mean): 3.5
+    ##
     ##  Group Details:
 
 ``` r
@@ -452,8 +452,8 @@ print(group_summary)
 ```
 
     ## # A tibble: 2 × 5
-    ##   gruppe_id n_observations date_start          date_end           
-    ##       <int>          <int> <dttm>              <dttm>             
+    ##   gruppe_id n_observations date_start          date_end
+    ##       <int>          <int> <dttm>              <dttm>
     ## 1         1              3 2026-01-01 10:00:00 2026-01-05 12:00:00
     ## 2         2              4 2026-01-02 09:00:00 2026-01-06 23:00:00
     ## # ℹ 1 more variable: duration_days <dbl>
@@ -483,29 +483,29 @@ cat(
 )
 ```
 
-    ## 
+    ##
     ##  SPATIAL STATISTICS
     ## ------------------
     ## Within-group distances (meters):
     ##   Mean: 4021m
     ##   Median: 3568m
     ##   Max: 7048m
-    ## 
+    ##
     ##  TEMPORAL STATISTICS
     ##  -------------------
-    ##  Overall date range: 2026-01-01 to 2026-01-06 
+    ##  Overall date range: 2026-01-01 to 2026-01-06
     ##  Total time span: 6 days
-    ## 
+    ##
     ##  SELECTED CONFIGURATION
     ##  ----------------------
-    ##  Clustering method: cluster_hierarchical 
-    ##  Ordering method: time 
-    ##  Reversed: FALSE 
-    ## 
+    ##  Clustering method: cluster_hierarchical
+    ##  Ordering method: time
+    ##  Reversed: FALSE
+    ##
     ##  DATA QUALITY
     ##  ------------
-    ##  Missing geometries: 0 
-    ##  Invalid geometries: 0 
+    ##  Missing geometries: 0
+    ##  Invalid geometries: 0
     ##  CRS: EPSG:3006
 
 ## 7. Export Results
@@ -570,13 +570,13 @@ cat(
 )
 ```
 
-    ## Exporting results with timestamp: 20260301_171638 
-    ## 
-    ##  GeoPackage files: lynx_family_group_observations_20260301_171638.gpkg lynx_family_group_centers_20260301_171638.gpkg lynx_family_group_lines_20260301_171638.gpkg 
-    ##  Parquet: lynx_family_group_observations_20260301_171638.parquet 
-    ##  CSV files: lynx_family_group_assignments_20260301_171638.csv sensitivity_analysis_20260301_171638.csv 
-    ##  Map file: lynx_family_groups_map_20260301_171638.html 
-    ## 
+    ## Exporting results with timestamp: 20260301_171638
+    ##
+    ##  GeoPackage files: lynx_family_group_observations_20260301_171638.gpkg lynx_family_group_centers_20260301_171638.gpkg lynx_family_group_lines_20260301_171638.gpkg
+    ##  Parquet: lynx_family_group_observations_20260301_171638.parquet
+    ##  CSV files: lynx_family_group_assignments_20260301_171638.csv sensitivity_analysis_20260301_171638.csv
+    ##  Map file: lynx_family_groups_map_20260301_171638.html
+    ##
     ##  To view the interactive map, open: /home/wilaca/git/miljodirektoratet/dp-gaupe-familiegrupper/output/lynx_family_groups_map_20260301_171638.html
 
 ## 8. Session Information
@@ -589,48 +589,48 @@ sessionInfo()
     ## R version 4.4.0 (2024-04-24)
     ## Platform: x86_64-pc-linux-gnu
     ## Running under: Ubuntu 24.04.3 LTS
-    ## 
+    ##
     ## Matrix products: default
-    ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+    ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3
     ## LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0
-    ## 
+    ##
     ## locale:
-    ##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
-    ##  [3] LC_TIME=nb_NO.UTF-8        LC_COLLATE=en_US.UTF-8    
-    ##  [5] LC_MONETARY=nb_NO.UTF-8    LC_MESSAGES=en_US.UTF-8   
-    ##  [7] LC_PAPER=nb_NO.UTF-8       LC_NAME=C                 
-    ##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
-    ## [11] LC_MEASUREMENT=nb_NO.UTF-8 LC_IDENTIFICATION=C       
-    ## 
+    ##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C
+    ##  [3] LC_TIME=nb_NO.UTF-8        LC_COLLATE=en_US.UTF-8
+    ##  [5] LC_MONETARY=nb_NO.UTF-8    LC_MESSAGES=en_US.UTF-8
+    ##  [7] LC_PAPER=nb_NO.UTF-8       LC_NAME=C
+    ##  [9] LC_ADDRESS=C               LC_TELEPHONE=C
+    ## [11] LC_MEASUREMENT=nb_NO.UTF-8 LC_IDENTIFICATION=C
+    ##
     ## time zone: Europe/Oslo
     ## tzcode source: system (glibc)
-    ## 
+    ##
     ## attached base packages:
-    ## [1] stats     graphics  grDevices datasets  utils     methods   base     
-    ## 
+    ## [1] stats     graphics  grDevices datasets  utils     methods   base
+    ##
     ## other attached packages:
-    ## [1] viridis_0.6.5       viridisLite_0.4.2   htmlwidgets_1.6.4  
-    ## [4] leaflet_2.2.2       dplyr_1.1.4         sf_1.0-16          
-    ## [7] gaupefam_0.0.0.9000 here_1.0.2         
-    ## 
+    ## [1] viridis_0.6.5       viridisLite_0.4.2   htmlwidgets_1.6.4
+    ## [4] leaflet_2.2.2       dplyr_1.1.4         sf_1.0-16
+    ## [7] gaupefam_0.0.0.9000 here_1.0.2
+    ##
     ## loaded via a namespace (and not attached):
-    ##  [1] s2_1.1.6                sass_0.4.9              utf8_1.2.4             
-    ##  [4] generics_0.1.3          renv_1.1.6              class_7.3-22           
-    ##  [7] KernSmooth_2.23-22      digest_0.6.35           magrittr_2.0.3         
-    ## [10] evaluate_0.24.0         grid_4.4.0              fastmap_1.2.0          
-    ## [13] rprojroot_2.1.1         jsonlite_1.8.8          e1071_1.7-14           
-    ## [16] DBI_1.2.3               gridExtra_2.3           purrr_1.0.2            
-    ## [19] fansi_1.0.6             crosstalk_1.2.1         scales_1.3.0           
-    ## [22] jquerylib_0.1.4         cli_3.6.2               rlang_1.1.4            
-    ## [25] units_0.8-5             bit64_4.0.5             munsell_0.5.1          
-    ## [28] cachem_1.1.0            withr_3.0.0             yaml_2.3.8             
-    ## [31] parallel_4.4.0          tools_4.4.0             colorspace_2.1-0       
-    ## [34] ggplot2_3.5.1           assertthat_0.2.1        vctrs_0.6.5            
-    ## [37] R6_2.5.1                proxy_0.4-27            lifecycle_1.0.4        
+    ##  [1] s2_1.1.6                sass_0.4.9              utf8_1.2.4
+    ##  [4] generics_0.1.3          renv_1.1.6              class_7.3-22
+    ##  [7] KernSmooth_2.23-22      digest_0.6.35           magrittr_2.0.3
+    ## [10] evaluate_0.24.0         grid_4.4.0              fastmap_1.2.0
+    ## [13] rprojroot_2.1.1         jsonlite_1.8.8          e1071_1.7-14
+    ## [16] DBI_1.2.3               gridExtra_2.3           purrr_1.0.2
+    ## [19] fansi_1.0.6             crosstalk_1.2.1         scales_1.3.0
+    ## [22] jquerylib_0.1.4         cli_3.6.2               rlang_1.1.4
+    ## [25] units_0.8-5             bit64_4.0.5             munsell_0.5.1
+    ## [28] cachem_1.1.0            withr_3.0.0             yaml_2.3.8
+    ## [31] parallel_4.4.0          tools_4.4.0             colorspace_2.1-0
+    ## [34] ggplot2_3.5.1           assertthat_0.2.1        vctrs_0.6.5
+    ## [37] R6_2.5.1                proxy_0.4-27            lifecycle_1.0.4
     ## [40] classInt_0.4-10         bit_4.0.5               leaflet.providers_2.0.0
-    ## [43] arrow_16.1.0            pkgconfig_2.0.3         bslib_0.7.0            
-    ## [46] pillar_1.9.0            gtable_0.3.5            glue_1.7.0             
-    ## [49] Rcpp_1.0.12             xfun_0.44               tibble_3.2.1           
-    ## [52] tidyselect_1.2.1        highr_0.11              knitr_1.47             
-    ## [55] farver_2.1.2            htmltools_0.5.8.1       rmarkdown_2.27         
+    ## [43] arrow_16.1.0            pkgconfig_2.0.3         bslib_0.7.0
+    ## [46] pillar_1.9.0            gtable_0.3.5            glue_1.7.0
+    ## [49] Rcpp_1.0.12             xfun_0.44               tibble_3.2.1
+    ## [52] tidyselect_1.2.1        highr_0.11              knitr_1.47
+    ## [55] farver_2.1.2            htmltools_0.5.8.1       rmarkdown_2.27
     ## [58] wk_0.9.1                compiler_4.4.0

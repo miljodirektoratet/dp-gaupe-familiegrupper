@@ -1,6 +1,6 @@
 # Migration Status — gaupefam Package
 
-**Last Updated:** February 2, 2026  
+**Last Updated:** February 2, 2026
 **Status:** MIGRATION COMPLETE - All functions migrated with node pipeline architecture
 
 ## Overall Progress
@@ -17,7 +17,7 @@
 - notebooks/example_family_grouping_workflow.Rmd — Example notebook
 - data-raw/lynx_family_test_data.R — Test data
 - tests/testthat/ — Unit tests
-- output/ —  Output files generated in example notebook 
+- output/ —  Output files generated in example notebook
 
 ## Migration Standards
 
