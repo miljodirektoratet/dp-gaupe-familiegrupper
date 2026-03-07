@@ -34,6 +34,7 @@ Databricks jobs or Docker cron scheduling.
   - [Prerequisites](#prerequisites)
   - [Development Setup](#development-setup)
   - [Development Workflow](#development-workflow)
+  - [Version Pinning and Releases](#version-pinning-and-releases)
   - [Code Quality Standards](#code-quality-standards)
   - [GHA Workflows](#gha-workflows)
   - [Branch Protection](#branch-protection)
@@ -87,7 +88,6 @@ Structure](./docs/repo-structure.md) documentation.
 | `renv/`                   | renv package management             |
 | `renv.lock`               | Locked package versions             |
 | `DESCRIPTION`             | Package metadata                    |
-| `Taskfile.yml`            | Task automation configuration       |
 
 ### Docker Configuration
 
@@ -129,12 +129,16 @@ your pipeline infrastructure:
 For scheduled data processing in Databricks environments:
 
 ``` r
-# Install in Databricks R notebook
+# Install in Databricks R notebook ensure to pin to a specific release for stability
 install.packages("remotes")
-remotes::install_github("miljodirektoratet/dp-gaupe-familiegrupper")
+remotes::install_github("miljodirektoratet/dp-gaupe-familiegrupper@v1.0.0")
+
+# Pin to an exact commit SHA
+remotes::install_github("miljodirektoratet/dp-gaupe-familiegrupper@<commit_sha>")
 
 # Load and use in your analysis
 library(gaupefam)
+packageVersion("gaupefam")
 # Your clustering analysis code here...
 ```
 
@@ -323,6 +327,44 @@ Dev Containers.
 See [Command Cheat Sheet](./docs/command-cheatsheet.md) for common
 commands and `scripts/ci-local.R` for the complete local CI workflow.
 
+### Release Workflow
+
+Versioning is defined in `DESCRIPTION` (`Version:`). Development
+versions typically use the `.9000` suffix (for example `0.0.0.9000`),
+while releases use semantic versions (`X.Y.Z`) and a matching git tag
+(`vX.Y.Z`).
+
+Release helper script:
+
+``` bash
+# From repository root
+chmod +x scripts/release_workflow.sh
+./scripts/release_workflow.sh
+```
+
+The script will:
+
+1.  Check that you are on `main` with a clean git working tree.
+2.  Prompt for a release version (for example `1.0.0`).
+3.  Update `DESCRIPTION` to that version and commit it.
+4.  Create and push tag `v1.0.0` (which triggers Docker CD with semver
+    tags).
+5.  Bump `DESCRIPTION` to the next development version (`1.1.0.9000`)
+    and push.
+
+Recommended first release flow:
+
+1.  Merge your final release-ready changes into `main`.
+2.  Pull latest `main` locally.
+3.  Run `./scripts/release_workflow.sh` and enter `1.0.0`.
+4.  Verify GitHub Actions runs in the Actions tab.
+5.  Install and verify the pinned release:
+
+``` r
+remotes::install_github("miljodirektoratet/dp-gaupe-familiegrupper@v1.0.0")
+packageVersion("gaupefam")
+```
+
 ### Code Quality Standards
 
 Follow R coding standards with roxygen2 documentation, consistent
@@ -339,15 +381,13 @@ rules are enforced in this repo.
 The repository includes automated workflows for code quality, security,
 and deployment:
 
-| Workflow            | Trigger                            | Purpose                                                 |
-|---------------------|------------------------------------|---------------------------------------------------------|
-| **R-CMD-check**     | `push`, `pull_request` to `main`   | R package validation, testing, cross-platform checks    |
-| **lint**            | `push`, `pull_request` to `main`   | Code style and quality checks using lintr               |
-| **CI Docker**       | `push` to `main`                   | Docker build and Test                                   |
-| **CD Docker**       | `push` to `main` with version tags | Container deployment to GitHub Registry                 |
-| **CodeQL Analysis** | `push`, `pull_request`, `schedule` | Code security analysis                                  |
-| **Dependabot**      | `schedule`                         | Automated dependency updates and vulnerability scanning |
-| **Zizmor Security** | `push`, `pull_request`             | GitHub Actions workflow security auditing               |
+| Workflow        | Trigger                                                                  | Purpose                                                 |
+|-----------------|--------------------------------------------------------------------------|---------------------------------------------------------|
+| **R-CMD-check** | `workflow_dispatch` (manual)                                             | R package validation, testing, cross-platform checks    |
+| **lint**        | `workflow_dispatch` (manual)                                             | Code style and quality checks using lintr               |
+| **CI Docker**   | `push` (all branches except `main`), `pull_request`, `workflow_dispatch` | Docker build and test                                   |
+| **CD Docker**   | `push` to `main`, semver tags `v*.*.*`, `workflow_dispatch`              | Container deployment to GitHub Registry                 |
+| **Dependabot**  | `schedule`                                                               | Automated dependency updates and vulnerability scanning |
 
 The R package workflows ensure code quality and compatibility across
 different R versions and operating systems. The **R-CMD-check** workflow
