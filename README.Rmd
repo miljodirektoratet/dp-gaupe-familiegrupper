@@ -285,7 +285,10 @@ Recommended first release flow:
 5. Install and verify the pinned release:
 
 ```r
-remotes::install_github("miljodirektoratet/dp-gaupe-familiegrupper@v1.0.0")
+remotes::install_github(
+  "miljodirektoratet/dp-gaupe-familiegrupper@v1.0.0",
+  upgrade = "never"
+)
 packageVersion("gaupefam")
 ```
 
