@@ -7,7 +7,13 @@ test_that("compare_grouping_methods returns data.frame with expected structure",
 
   expect_s3_class(result, "data.frame")
   expect_equal(ncol(result), 6)
-  expect_named(result, c("ordering_method", "reversed", "n_groups_hierarchical", "n_groups_custom", "time_hierarchical_min", "time_custom_min"))
+  expect_named(
+    result,
+    c(
+      "ordering_method", "reversed", "n_groups_hierarchical",
+      "n_groups_custom", "time_hierarchical_min", "time_custom_min"
+    )
+  )
 })
 
 test_that("compare_grouping_methods tests all 15 ordering strategies", {
