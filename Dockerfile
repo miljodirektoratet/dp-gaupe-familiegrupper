@@ -16,7 +16,8 @@ COPY man/ man/
 COPY R/ R/
 COPY data/ data/
 
-RUN R -e "devtools::install('.', dependencies = TRUE)" \
+# Install only Depends/Imports/LinkingTo in container runtime image.
+RUN R -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); devtools::install('.', dependencies = NA, upgrade = FALSE)" \
     && rm -rf /tmp/downloaded_packages
 
 WORKDIR /home/rstudio

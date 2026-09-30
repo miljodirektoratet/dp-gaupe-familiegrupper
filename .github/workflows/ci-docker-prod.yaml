@@ -3,14 +3,16 @@ name: CI - Docker Build and Test
 on:
   push:
     branches:
-      - '**'
-      - '!main'
+      - "**"
+      - "!main"
   pull_request:
   workflow_dispatch:
 
+env:
+  CI_IMAGE_TAG: gaupefam:ci-${{ github.sha }}
+
 concurrency:
-  group:
-    ${{ github.workflow }}-${{ github.ref_name }}-${{
+  group: ${{ github.workflow }}-${{ github.ref_name }}-${{
     github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 
@@ -25,9 +27,9 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build and export
-        uses: docker/build-push-action@v6.18.0
+        uses: docker/build-push-action@v6
         with:
-          tags: gaupefam:latest
+          tags: ${{ env.CI_IMAGE_TAG }}
           cache-from: type=gha,scope=gaupefam
           cache-to: type=gha,mode=min,scope=gaupefam
           outputs: type=docker,dest=/tmp/gaupefam.tar
@@ -59,7 +61,14 @@ jobs:
       - name: Test Docker compose
         run: |
           docker compose up -d
+          docker compose ps
+          docker compose logs --no-color --tail=200
+          if ! docker compose ps --status running | grep -q "test"; then
+            echo "Expected service 'test' to be running" >&2
+            exit 1
+          fi
           docker compose down
 
-      - name: Test R package
-        run: docker run gaupefam:latest Rscript -e "gaupefam::hello()"
+      - name: Test R package runtime path
+        run: |
+          docker run ${{ env.CI_IMAGE_TAG }} Rscript -e 'library(gaupefam); data("lynx_family_test_data", package = "gaupefam"); dm <- gaupefam::create_distance_matrix(lynx_family_test_data$geometry); stopifnot(is.matrix(dm), nrow(dm) > 0); gaupefam::hello()'
